@@ -1,9 +1,9 @@
+import mongoose, {Schema} from "mongoose"
+
 const contactSchema = new Schema({
     name: { type: String, required: true },
     email: { type: String, required: true },
     message: { type: String, required: true },
-    createdAt: { type: Date, default: Date.now }
-});
+}, {timestamps: true});
 
-const Contact = mongoose.model('Contact', contactSchema);
-module.exports = Contact;
+export const Contact = new mongoose.model('Contact', contactSchema);
