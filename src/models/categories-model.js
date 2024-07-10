@@ -1,9 +1,23 @@
-const categorySchema = new Schema({
-    name: { type: String, required: true },
-    description: { type: String },
-    createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date, default: Date.now }
-});
+import mongoose, {Schema} from "mongoose";
 
-const Category = mongoose.model('Category', categorySchema);
-module.exports = Category;
+const categorySchema = new Schema(
+    {
+        name: { 
+            type: String,
+            required: true
+        },
+
+        description: { 
+            type: String 
+        },
+
+        products: [
+            {
+                type: Schema.Types.ObjectId,
+                ref: "Product"
+            }
+        ]
+    }, {timestamps: true}
+);
+
+export const Category = new mongoose.model('Category', categorySchema);

@@ -1,3 +1,5 @@
+import mongoose, {Schema} from "mongoose"
+
 const productSchema = new Schema({
     name: { type: String, required: true },
     description: { type: String, required: true },
@@ -6,9 +8,6 @@ const productSchema = new Schema({
     stock: { type: Number, required: true },
     images: [String],
     reviews: [{ type: Schema.Types.ObjectId, ref: 'Review' }],
-    createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date, default: Date.now }
-});
+}, {timestamps: true});
 
-const Product = mongoose.model('Product', productSchema);
-module.exports = Product;
+export const Product = new mongoose.model('Product', productSchema);

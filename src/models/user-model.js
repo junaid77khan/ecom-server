@@ -1,12 +1,32 @@
-const mongoose = require('mongoose');
-const { Schema } = mongoose;
+import mongoose, {Schema} from "mongoose";
 
 const userSchema = new Schema({
-    username: { type: String, required: true, unique: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    firstName: { type: String },
-    lastName: { type: String },
+    username: {
+        type: String,
+        required: [true, "Username is required"],
+        unique: true,
+        lowercase: true,
+        trim: true,
+        index: true
+    },
+
+    email: {
+        type: String,
+        required: [true, "Email is required"],
+        unique: true,
+        trim: true
+    },
+
+    fullName: {
+        type: String,
+        required: true,
+        trim: true,
+        index: true
+    },
+    password: {
+        type: String,
+        required: [true, "Password is required"]
+    },
     address: {
         street: { type: String },
         city: { type: String },
@@ -15,9 +35,9 @@ const userSchema = new Schema({
         country: { type: String }
     },
     phoneNumber: { type: String },
-    createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date, default: Date.now }
-});
+    refreshToken: {
+        type: String
+    },
+}, {timestamps: true});
 
-const User = mongoose.model('User', userSchema);
-module.exports = User;
+export const User = new mongoose.model('User', userSchema);
