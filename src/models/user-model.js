@@ -1,4 +1,5 @@
 import mongoose, {Schema} from "mongoose";
+import { boolean } from "zod";
 
 const userSchema = new Schema({
     username: {
@@ -23,11 +24,19 @@ const userSchema = new Schema({
         trim: true,
         index: true
     },
+
     password: {
         type: String,
         required: [true, "Password is required"]
     },
+
+    isAdmin: {
+        type: Boolean,
+        default: false
+    },
+
     address: {
+        address: {type: String},
         street: { type: String },
         city: { type: String },
         state: { type: String },
@@ -35,6 +44,7 @@ const userSchema = new Schema({
         country: { type: String }
     },
     phoneNumber: { type: String },
+
     refreshToken: {
         type: String
     },
