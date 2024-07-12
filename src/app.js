@@ -21,4 +21,8 @@ app.use(express.urlencoded({extended: true, limit: "50000kb"}))
 app.use(express.static("public"))
 app.use(cookieParser())
 
+import categoryRouter from "./routes/category.route.js"
+
+app.use("/api/v1/category", categoryRouter);
+
 export default app

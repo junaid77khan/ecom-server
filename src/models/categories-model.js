@@ -8,7 +8,12 @@ const categorySchema = new Schema(
         },
 
         description: { 
-            type: String 
+            type: String,
+        },
+
+        image: {
+            type: String,
+            required: true
         },
 
         products: [
