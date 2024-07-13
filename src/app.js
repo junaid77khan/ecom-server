@@ -22,7 +22,9 @@ app.use(express.static("public"))
 app.use(cookieParser())
 
 import categoryRouter from "./routes/category.route.js"
+import ProductRouter from './routes/product.route.js';
 
 app.use("/api/v1/category", categoryRouter);
+app.use("/api/v1/product", ProductRouter);
 
 export default app
