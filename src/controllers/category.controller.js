@@ -53,7 +53,7 @@ const getAllCategories = asyncHandler(async(req, res) => {
 
     return res
     .status(200)
-    .json(new ApiResponse(200, {"Categories" :allCategories[0]}, "Categories Data fetched successfully"));
+    .json(new ApiResponse(200, allCategories, "Categories Data fetched successfully"));
 })
 
 const addCategory = asyncHandler( async(req, res) => {
