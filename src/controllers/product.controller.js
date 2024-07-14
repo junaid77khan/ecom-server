@@ -7,7 +7,7 @@ import { nameSchema, ProductSchema } from "../schemas/productSchema.js";
 import { uploadOnCloudinary, destroyOnCloudinary } from "../utils/cloudinary.js";
 import mongoose, { isValidObjectId } from "mongoose";
 import fs from 'fs'; 
-import {z} from 'zod';
+import { User } from "../models/user-model.js";
 
 const deleteImages = (files) => {
     try {
@@ -438,4 +438,100 @@ const updateProduct = asyncHandler(async(req, res) => {
     
 })
 
-export {getAllProducts, getProductByCategory, addProduct, deleteProduct, updateProduct}
+const getProductById = asyncHandler(async(req, res) => {
+    const {productId} = req.params;
+    console.log(productId);
+    if(!productId || !isValidObjectId(productId)) {
+        throw new ApiError(404, "No product Id received or product Id is invalid")
+    }
+
+    const product = await Product.findById({_id: productId}).populate('categoryId');
+
+    if(!product) {
+        return res
+        .json(new ApiResponse(200, "No product found"))
+    }
+
+    return res
+    .json(new ApiResponse(200, product, "Product data fetched successfully"));
+})
+
+const getProductByPriceRangeOfPartCategory = asyncHandler(async(req, res) => {
+    let{minRange, maxRange, categoryId} = req.body;
+    
+    if(!categoryId || !isValidObjectId(categoryId)) {
+        throw new ApiError(400, "Valid product Id is required");
+    }
+
+    minRange = Number(minRange);
+    maxRange = Number(maxRange);
+
+    if(typeof minRange !== 'number' || typeof maxRange !== 'number') {
+        throw new ApiError(400, "Valid range is required");
+    }
+
+    console.log(minRange, maxRange);
+
+    let products = await Product.aggregate([
+        {
+            $match: {
+                categoryId: new mongoose.Types.ObjectId(categoryId)
+            }
+        }
+    ])
+
+    console.log(products);
+
+    products = products.filter((product) => (product.price >= minRange && product.price <= maxRange));
+
+    if(!products || products?.length === 0) {
+        return res
+        .json(new ApiResponse(200, "No product found in this range"));
+    }
+
+    return res
+        .json(new ApiResponse(200, products, "Products data fetched successfully"));
+})
+
+const addReviewInProduct = asyncHandler(async(req, res) => {
+    let {productId, userId, rating, review} = req.body;
+
+    if(!productId || !userId || !rating || !review || !isValidObjectId(productId) || !isValidObjectId(userId)) {
+        throw new ApiError(400, "ProductId, UserId, rating and review each are required and each should be valid");
+    }
+
+    rating = Number(rating);
+    if(typeof rating !== 'number') {
+        throw new ApiError(400, "Rating should be a number");
+    }
+
+    let product = await Product.findById({_id: productId});
+    if(!product) {
+        return res
+        .json(new ApiResponse(404, "No product found"))
+    }
+    let user = await User.findById({_id: userId});
+    if(!user) {
+        return res
+        .json(new ApiResponse(404, "No user found"))
+    }
+    if(user._id !== req.user._id) {
+        return res
+        .json(new ApiResponse(400, "Logged In user and provided userId does not match"))
+    }
+    product.ratingsReviews.push({
+        review,
+        user: user._id,
+        rating,
+        createdAt: new Date.now()
+    })
+    const response = await product.save();
+    if(!response) {
+        return res
+        .json(new ApiResponse(404, "Something went wrong while adding review"));
+    } 
+    return res
+        .json(new ApiResponse(200, response, "Review added to the product"));
+})
+
+export {getAllProducts, getProductByCategory, addProduct, deleteProduct, updateProduct, getProductById, getProductByPriceRangeOfPartCategory, addReviewInProduct}
