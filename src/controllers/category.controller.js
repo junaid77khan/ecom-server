@@ -5,9 +5,10 @@ import { Category } from "../models/categories-model.js";
 import { categorySchema } from "../schemas/categorySchema.js";
 import { uploadOnCloudinary, destroyOnCloudinary } from "../utils/cloudinary.js";
 import { isValidObjectId } from "mongoose";
+import { Product } from "../models/product-model.js";
 
 const getAllCategories = asyncHandler(async(req, res) => {
-    let { page = 1, limit = 10, query, sortBy, sortType } = req.query
+    let { page = 1, limit = 10, query, sortType="asc" } = req.query
     page = isNaN(page) ? 1 : Number(page);
     limit = isNaN(limit) ? 10 : Number(limit);
 
@@ -30,7 +31,7 @@ const getAllCategories = asyncHandler(async(req, res) => {
 
         {
             $sort: {
-                [sortBy]:  sortType === 'asc' ? 1 : -1
+                name:  sortType === 'asc' ? 1 : -1
             }
         },
 
@@ -59,12 +60,12 @@ const getAllCategories = asyncHandler(async(req, res) => {
 const addCategory = asyncHandler( async(req, res) => {
     const user = req?.user;
 
-    if(!user || !user?.isAdmin) {
-        return res.status(403).json({
-            error: "Unauthorized access",
-            message: "Access to this resource is restricted to administrators only"
-        });
-    }
+    // if(!user || !user?.isAdmin) {
+    //     return res.status(403).json({
+    //         error: "Unauthorized access",
+    //         message: "Access to this resource is restricted to administrators only"
+    //     });
+    // }
 
     const{name, description} = req.body;
     const imageLocalPath = req.files?.image[0].path;
@@ -135,12 +136,12 @@ const addCategory = asyncHandler( async(req, res) => {
 const deleteCategory = asyncHandler(async(req, res) => {
     const user = req?.user;
 
-    if(!user || !user?.isAdmin) {
-        return res.status(403).json({
-            error: "Unauthorized access",
-            message: "Access to this resource is restricted to administrators only"
-        });
-    }
+    // if(!user || !user?.isAdmin) {
+    //     return res.status(403).json({
+    //         error: "Unauthorized access",
+    //         message: "Access to this resource is restricted to administrators only"
+    //     });
+    // }
 
     const {categoryId} = req.params;
     // const {categoryId} = req.body;
@@ -157,9 +158,16 @@ const deleteCategory = asyncHandler(async(req, res) => {
             .json(new ApiResponse(200, {}, "Category not found"))
     }
 
-    const{ _id } = category;
+    category.products.forEach(asyncHandler(async(productId) => {
+        const curProduct = await Product.findById({_id: productId});
+        destroyOnCloudinary(curProduct.images[0]);
+        destroyOnCloudinary(curProduct.images[1]);
+        destroyOnCloudinary(curProduct.images[2]);
+    }))
 
-    const response = await Category.findByIdAndDelete(_id);
+    await Product.deleteMany({ categoryId });
+
+    const response = await Category.findByIdAndDelete({_id: categoryId});
 
     if(!response) {
         throw new ApiError(400, "Deletion of category failed")
@@ -173,18 +181,18 @@ const deleteCategory = asyncHandler(async(req, res) => {
 const updateCategory = asyncHandler(async(req, res) => {
     const user = req?.user;
 
-    if(!user || !user?.isAdmin) {
-        return res.status(403).json({
-            error: "Unauthorized access",
-            message: "Access to this resource is restricted to administrators only"
-        });
-    }
+    // if(!user || !user?.isAdmin) {
+    //     return res.status(403).json({
+    //         error: "Unauthorized access",
+    //         message: "Access to this resource is restricted to administrators only"
+    //     });
+    // }
 
     const { categoryId } = req.params
     const { name, description } = req.body
     const imageLocalPath = req.files?.image[0].path;
 
-    if( !name || !description || !imageLocalPath) {
+    if( !name && !description && !imageLocalPath) {
         throw new ApiError(404, "No updated data received")
     }
     
