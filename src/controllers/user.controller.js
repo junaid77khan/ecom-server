@@ -16,17 +16,15 @@ const UsernameSchema = z.object({
 });
 
 
-  const registerUser = asyncHandler( async(req, res) => {
-    const {username, email, fullName, password} = req.body;
+const signup = asyncHandler( async(req, res) => {
+    const {username, email, password} = req.body;
 
     const validation = signupSchema.safeParse(req.body);
 
     if(!validation.success) {
         const usernameErrors = validation.error.format().username?._errors || [];
-        const fullNameErrors = validation.error.format().fullName?._errors || [];
         const emailErrors = validation.error.format().email?._errors || [];
         const passwordErrors = validation.error.format().password?._errors || [];
-        // const allErrors = validation.error.format();
 
         return res
         .status(400)
@@ -35,7 +33,6 @@ const UsernameSchema = z.object({
                 400,
                 {
                     "usernameError": `${usernameErrors?.length > 0 ? `${usernameErrors[0]}` : ""}`,
-                    "fullNameError": `${fullNameErrors?.length > 0 ? `${fullNameErrors[0]}` : ""}`,
                     "emailError": `${emailErrors?.length > 0 ? `${emailErrors[0]}` : ""}`,
                     "passwordError": `${passwordErrors?.length > 0 ? `${passwordErrors[0]}` : ""}`,
                 },
@@ -45,7 +42,7 @@ const UsernameSchema = z.object({
 
         
         if(
-            [username, email, fullName, password].some( (field) => field?.trim === "" )
+            [username, email, password].some( (field) => field?.trim === "" )
         ) {
     
             return res
@@ -90,29 +87,23 @@ const UsernameSchema = z.object({
             )
         } 
 
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-
         const expiryDate = new Date();
         expiryDate.setHours(expiryDate.getHours() + 1);
 
-        existingUserByEmail.password = hashedPassword;
+        existingUserByEmail.username = username;
+        existingUserByEmail.password = password;
         existingUserByEmail.verifyCode = verifyCode;
         existingUserByEmail.verifyCodeExpiry = expiryDate;
    
         await existingUserByEmail.save();
     } else {
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-
         const expiryDate = new Date();
         expiryDate.setHours(expiryDate.getHours() + 1);
 
         await User.create({
             username,
             email,
-            fullName,
-            password: hashedPassword,
+            password,
             verifyCode,
             verifyCodeExpiry: expiryDate,
             isVerified: false,
@@ -123,7 +114,7 @@ const UsernameSchema = z.object({
 
     const {accessToken, refreshToken} = await generateAccessAndRefreshTken({userId: user[0]._id});
     
-    const createdUser = await User.find({_id: user._id}).select(
+    const createdUser = await User.find({_id: user[0]._id}).select(
         "-password -refreshToken -verifyCode -verifyCodeExpiry" 
     );
 
@@ -139,11 +130,11 @@ const UsernameSchema = z.object({
         verifyCode
     )
 
-    if(!verificationEmailResponse.success) {
+    if(!verificationEmailResponse) {
         return res
         .status(500)
         .json(
-            new ApiResponse(500, verificationEmailResponse.message)
+            new ApiResponse(500, verificationEmailResponse.response)
         )
     }
 
@@ -198,19 +189,21 @@ const verifyCode = asyncHandler(async(req, res) => {
         const validUsername = usernameValidationResult.data.username;
         const validCode = codeValidationResult.data.code;
 
-        const decodedUsername = decodeURIComponent(validUsername); 
-
-        const user = await User.findOne({ username: decodedUsername });
+        const user = await User.findOne({ username: validUsername });
 
         if (!user) {
-            return Response.json(
-                {
-                    success: false,
-                    message: "Username not found"
-                },
-                {
-                    status: 400
-                }
+            return res
+            .status(404)
+            .json(
+                new ApiResponse(404, "User not found")
+            );
+        }
+
+        if(user.isVerified) {
+            return res
+            .status(404)
+            .json(
+                new ApiResponse(404, "User is already verfied")
             );
         }
 
@@ -240,4 +233,83 @@ const verifyCode = asyncHandler(async(req, res) => {
         }
 })
 
-export {registerUser, verifyCode};
+const signin = asyncHandler(async(req, res) => {
+    const{email, username, password} = req.body;
+
+    if((!email && !username) || !password) {
+        throw new ApiError(400, "All fields are required");
+    }
+
+    const user = await User.findOne({
+        $or: [
+            {email},
+            {username}
+        ]
+    });
+
+    if(!user) {
+        return res
+        .status(400)
+        .json(
+            new ApiResponse(
+                400,
+                {
+                    "userError": "User does not exists",
+                },
+            )
+        )
+    }
+
+    if(!user.isVerified) {
+        return res
+        .status(400)
+        .json(
+            new ApiResponse(
+                400,
+                {
+                    "userError": "Account is not verified",
+                },
+            )
+        )
+    }
+    const isPasswordValid = await bcrypt.compare(password, user.password)
+    if(!isPasswordValid) {
+        return res
+        .status(400)
+        .json(
+            new ApiResponse(
+                400,
+                {
+                    "userError": "Credentials are wrong"
+                },
+            )
+        )
+    }
+
+    const {accessToken, refreshToken} = await generateAccessAndRefreshTken({userId: user._id})
+
+    const loggedInUser = await User.findById(user._id)
+    .select("-password -refreshToken -verifyCode -verifyCodeExpiry");
+
+    const options = {
+        httpOnly: true,
+        secure: true,
+        expires: new Date(Date.now() + 25892000000),
+        sameSite: 'None',
+    }
+
+    return res
+    .status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json(
+        new ApiResponse(
+            200,
+            {
+                user: loggedInUser, refreshToken, accessToken
+            },
+            "User logged in successfully"
+        )
+    )
+})
+export {signup, verifyCode, signin};

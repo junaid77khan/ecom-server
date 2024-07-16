@@ -4,7 +4,6 @@ import { User } from "../models/user-model.js";
 export const generateAccessAndRefreshTken = async ({userId}) => {
   
     try {
-      console.log(userId);
   
       const user = await User.findById(userId)
   
