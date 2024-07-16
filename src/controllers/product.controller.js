@@ -3,6 +3,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/AsyncHandler.js";
 import { Category } from "../models/categories-model.js";
 import { Product } from "../models/product-model.js";
+import { Cart } from "../models/cart-model.js";
 import { nameSchema, ProductSchema } from "../schemas/productSchema.js";
 import { uploadOnCloudinary, destroyOnCloudinary } from "../utils/cloudinary.js";
 import mongoose, { isValidObjectId } from "mongoose";
@@ -106,12 +107,12 @@ const getProductByCategory = asyncHandler(async (req, res) => {
 const addProduct = asyncHandler(async(req, res) => {
     const user = req?.user;
 
-    // if(!user || !user?.isAdmin) {
-    //     return res.status(403).json({
-    //         error: "Unauthorized access",
-    //         message: "Access to this resource is restricted to administrators only"
-    //     });
-    // }
+    if(!user || !user?.isAdmin) {
+        return res.status(403).json({
+            error: "Unauthorized access",
+            message: "Access to this resource is restricted to administrators only"
+        });
+    }
 
     let {name, description, features, specifications, price, stock, categoryId, offer} = req.body;
     const {files} = req;
@@ -235,12 +236,12 @@ const addProduct = asyncHandler(async(req, res) => {
 const deleteProduct = asyncHandler(async(req, res) => {
     const user = req?.user;
 
-    // if(!user || !user?.isAdmin) {
-    //     return res.status(403).json({
-    //         error: "Unauthorized access",
-    //         message: "Access to this resource is restricted to administrators only"
-    //     });
-    // }
+    if(!user || !user?.isAdmin) {
+        return res.status(403).json({
+            error: "Unauthorized access",
+            message: "Access to this resource is restricted to administrators only"
+        });
+    }
 
     const {productId} = req.params;
 
@@ -264,6 +265,11 @@ const deleteProduct = asyncHandler(async(req, res) => {
         await category.save();
     }
 
+    await Cart.updateMany(
+        { 'items.product': product._id },
+        { $pull: { items: { product: product._id } } }
+    );
+
     destroyOnCloudinary(product.images[0]);
     destroyOnCloudinary(product.images[1]);
     destroyOnCloudinary(product.images[2]);
@@ -282,12 +288,12 @@ const deleteProduct = asyncHandler(async(req, res) => {
 const updateProduct = asyncHandler(async(req, res) => {
     const user = req?.user;
 
-    // if(!user || !user?.isAdmin) {
-    //     return res.status(403).json({
-    //         error: "Unauthorized access",
-    //         message: "Access to this resource is restricted to administrators only"
-    //     });
-    // }
+    if(!user || !user?.isAdmin) {
+        return res.status(403).json({
+            error: "Unauthorized access",
+            message: "Access to this resource is restricted to administrators only"
+        });
+    }
 
     let { productId } = req.params
     let { name, description, features, specifications, price, unitsSold, stock, categoryId, offer} = req.body
