@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getAllProducts, getProductByCategory, addProduct, deleteProduct, updateProduct, getProductById, getProductByPriceRangeOfPartCategory, addReviewInProduct} from "../controllers/product.controller.js";
+import { getAllProducts, getProductByCategory, addProduct, deleteProduct, updateProduct, getProductById, getProductByPriceRangeOfPartCategory, addReviewInProduct, mostPopularProducts, newItems} from "../controllers/product.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middlware.js";
 
@@ -10,7 +10,7 @@ router.route("/all-products").get(getAllProducts);
 router.route("/product-by-category").post(getProductByCategory);
 
 router.route("/add-product").post(
-    // verifyJWT,
+    verifyJWT,
     upload.fields([
         {
             name: "image1",
@@ -28,9 +28,13 @@ router.route("/add-product").post(
     addProduct
 )
 
-router.route("/delete-product/:productId").get(deleteProduct);
+router.route("/delete-product/:productId").get(
+    verifyJWT,
+    deleteProduct
+);
 
 router.route("/update-product/:productId").post(
+    verifyJWT,
     upload.fields([
         {
             name: "image1",
@@ -55,5 +59,9 @@ router.route("/add-review").post(
     // verifyJWT,
     addReviewInProduct
 );
+
+router.route("/most-popular-products").get(mostPopularProducts);
+
+router.route("/new-items").get(newItems);
 
 export default router

@@ -58,6 +58,7 @@ const getAllCartProducts = asyncHandler( async(req, res) => {
 
     const cartProducts = await Cart.findOne({user}).populate('items.product', '-updatedAt -createdAt');
 
+    console.log(cartProducts);
     if(!cartProducts) {
         return res
         .status(500)

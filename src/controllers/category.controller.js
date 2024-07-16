@@ -6,6 +6,8 @@ import { categorySchema } from "../schemas/categorySchema.js";
 import { uploadOnCloudinary, destroyOnCloudinary } from "../utils/cloudinary.js";
 import { isValidObjectId } from "mongoose";
 import { Product } from "../models/product-model.js";
+import { Cart } from "../models/cart-model.js";
+import { ParseStatus } from "zod";
 
 const getAllCategories = asyncHandler(async(req, res) => {
     let { page = 1, limit = 10, query, sortType="asc" } = req.query
@@ -60,12 +62,12 @@ const getAllCategories = asyncHandler(async(req, res) => {
 const addCategory = asyncHandler( async(req, res) => {
     const user = req?.user;
 
-    // if(!user || !user?.isAdmin) {
-    //     return res.status(403).json({
-    //         error: "Unauthorized access",
-    //         message: "Access to this resource is restricted to administrators only"
-    //     });
-    // }
+    if(!user || !user?.isAdmin) {
+        return res.status(403).json({
+            error: "Unauthorized access",
+            message: "Access to this resource is restricted to administrators only"
+        });
+    }
 
     const{name, description} = req.body;
     const imageLocalPath = req.files?.image[0].path;
@@ -136,12 +138,12 @@ const addCategory = asyncHandler( async(req, res) => {
 const deleteCategory = asyncHandler(async(req, res) => {
     const user = req?.user;
 
-    // if(!user || !user?.isAdmin) {
-    //     return res.status(403).json({
-    //         error: "Unauthorized access",
-    //         message: "Access to this resource is restricted to administrators only"
-    //     });
-    // }
+    if(!user || !user?.isAdmin) {
+        return res.status(403).json({
+            error: "Unauthorized access",
+            message: "Access to this resource is restricted to administrators only"
+        });
+    }
 
     const {categoryId} = req.params;
     // const {categoryId} = req.body;
@@ -150,7 +152,7 @@ const deleteCategory = asyncHandler(async(req, res) => {
         throw new ApiError(400, "Invalid category Id")
     }
     
-    const category = await Category.findById(categoryId)
+    const category = await Category.findById({_id: categoryId})
 
     if(!category) {
         return res
@@ -158,35 +160,54 @@ const deleteCategory = asyncHandler(async(req, res) => {
             .json(new ApiResponse(200, {}, "Category not found"))
     }
 
-    category.products.forEach(asyncHandler(async(productId) => {
-        const curProduct = await Product.findById({_id: productId});
-        destroyOnCloudinary(curProduct.images[0]);
-        destroyOnCloudinary(curProduct.images[1]);
-        destroyOnCloudinary(curProduct.images[2]);
-    }))
+    let products = await Product.find({categoryId: category._id});
 
-    await Product.deleteMany({ categoryId });
+    products.forEach( async(product) => {
+        // deleting all products from cart
+        await Cart.updateMany(
+            { 'items.product': product._id },
+            { $pull: { items: { product: product._id } } }
+        );
 
-    const response = await Category.findByIdAndDelete({_id: categoryId});
+        // deleting product images
+        await destroyOnCloudinary(product.images[0]);
+        await destroyOnCloudinary(product.images[1]);
+        await destroyOnCloudinary(product.images[2]);
+
+        // delete product
+        let response = await Product.findByIdAndDelete({_id: product._id});
+
+        if(!response) {
+            return res
+            .status(500)
+            .json(new ApiResponse(500, "Something went wrong while deleting product from database"));
+        }
+    })
+
+    await destroyOnCloudinary(category.image);
+
+    let response = await Category.findByIdAndDelete({_id: category._id});
 
     if(!response) {
-        throw new ApiError(400, "Deletion of category failed")
+        return res
+        .status(500)
+        .json(new ApiResponse(500, "Something went wrong while deleting category from database"));
     }
 
     return res
     .status(200)
-    .json(new ApiResponse(200, {}, "Category deleted successfully"))
+    .json(new ApiResponse(200, response, "Category deleted successfully"))
 })
 
 const updateCategory = asyncHandler(async(req, res) => {
     const user = req?.user;
 
-    // if(!user || !user?.isAdmin) {
-    //     return res.status(403).json({
-    //         error: "Unauthorized access",
-    //         message: "Access to this resource is restricted to administrators only"
-    //     });
-    // }
+    if(!user || !user?.isAdmin) {
+        return res.status(403).json({
+            error: "Unauthorized access",
+            message: "Access to this resource is restricted to administrators only"
+        });
+    }
 
     const { categoryId } = req.params
     const { name, description } = req.body

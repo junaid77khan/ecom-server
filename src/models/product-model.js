@@ -1,4 +1,7 @@
 import mongoose from 'mongoose';
+import { asyncHandler } from '../utils/AsyncHandler.js';
+import { Cart } from './cart-model.js';
+import { destroyOnCloudinary } from '../utils/cloudinary.js';
 
 const specificationSchema = new mongoose.Schema({
   name: {
@@ -72,5 +75,4 @@ const productSchema = new mongoose.Schema({
     },
   ],
 }, { timestamps: true });
-
 export const Product = mongoose.model('Product', productSchema);

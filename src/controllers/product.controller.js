@@ -3,6 +3,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/AsyncHandler.js";
 import { Category } from "../models/categories-model.js";
 import { Product } from "../models/product-model.js";
+import { Cart } from "../models/cart-model.js";
 import { nameSchema, ProductSchema } from "../schemas/productSchema.js";
 import { uploadOnCloudinary, destroyOnCloudinary } from "../utils/cloudinary.js";
 import mongoose, { isValidObjectId } from "mongoose";
@@ -106,12 +107,12 @@ const getProductByCategory = asyncHandler(async (req, res) => {
 const addProduct = asyncHandler(async(req, res) => {
     const user = req?.user;
 
-    // if(!user || !user?.isAdmin) {
-    //     return res.status(403).json({
-    //         error: "Unauthorized access",
-    //         message: "Access to this resource is restricted to administrators only"
-    //     });
-    // }
+    if(!user || !user?.isAdmin) {
+        return res.status(403).json({
+            error: "Unauthorized access",
+            message: "Access to this resource is restricted to administrators only"
+        });
+    }
 
     let {name, description, features, specifications, price, stock, categoryId, offer} = req.body;
     const {files} = req;
@@ -235,12 +236,12 @@ const addProduct = asyncHandler(async(req, res) => {
 const deleteProduct = asyncHandler(async(req, res) => {
     const user = req?.user;
 
-    // if(!user || !user?.isAdmin) {
-    //     return res.status(403).json({
-    //         error: "Unauthorized access",
-    //         message: "Access to this resource is restricted to administrators only"
-    //     });
-    // }
+    if(!user || !user?.isAdmin) {
+        return res.status(403).json({
+            error: "Unauthorized access",
+            message: "Access to this resource is restricted to administrators only"
+        });
+    }
 
     const {productId} = req.params;
 
@@ -264,6 +265,11 @@ const deleteProduct = asyncHandler(async(req, res) => {
         await category.save();
     }
 
+    await Cart.updateMany(
+        { 'items.product': product._id },
+        { $pull: { items: { product: product._id } } }
+    );
+
     destroyOnCloudinary(product.images[0]);
     destroyOnCloudinary(product.images[1]);
     destroyOnCloudinary(product.images[2]);
@@ -282,12 +288,12 @@ const deleteProduct = asyncHandler(async(req, res) => {
 const updateProduct = asyncHandler(async(req, res) => {
     const user = req?.user;
 
-    // if(!user || !user?.isAdmin) {
-    //     return res.status(403).json({
-    //         error: "Unauthorized access",
-    //         message: "Access to this resource is restricted to administrators only"
-    //     });
-    // }
+    if(!user || !user?.isAdmin) {
+        return res.status(403).json({
+            error: "Unauthorized access",
+            message: "Access to this resource is restricted to administrators only"
+        });
+    }
 
     let { productId } = req.params
     let { name, description, features, specifications, price, unitsSold, stock, categoryId, offer} = req.body
@@ -534,4 +540,44 @@ const addReviewInProduct = asyncHandler(async(req, res) => {
         .json(new ApiResponse(200, response, "Review added to the product"));
 })
 
-export {getAllProducts, getProductByCategory, addProduct, deleteProduct, updateProduct, getProductById, getProductByPriceRangeOfPartCategory, addReviewInProduct}
+const mostPopularProducts = asyncHandler(async(req, res) => {
+    const popularProducts = await Product.find()
+            .sort({ unitsSold: -1 }) 
+            .limit(8);
+
+    if(!popularProducts) {
+        throw new ApiError(500, "Something went wrong while fetching most popular product data");
+    }
+
+    if(popularProducts?.length === 0) {
+        return res
+        .status(200)
+        .json(new ApiResponse(200, "No products in database"));
+    }
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, popularProducts, "Most popular products data fetched successfully"));
+})
+
+const newItems = asyncHandler(async(req, res) => {
+    const newItemsData = await Product.find()
+            .sort({ createdAt: -1 }) 
+            .limit(8);
+
+    if(!newItemsData) {
+        throw new ApiError(500, "Something went wrong while fetching new items data");
+    }
+
+    if(newItemsData.length === 0) {
+        return res
+        .status(200)
+        .json(new ApiResponse(200, "No products in database"));
+    }
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, newItemsData, "New Items data fetched successfully"));
+})
+
+export {getAllProducts, getProductByCategory, addProduct, deleteProduct, updateProduct, getProductById, getProductByPriceRangeOfPartCategory, addReviewInProduct, mostPopularProducts,newItems}
