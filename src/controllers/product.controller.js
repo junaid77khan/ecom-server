@@ -540,4 +540,44 @@ const addReviewInProduct = asyncHandler(async(req, res) => {
         .json(new ApiResponse(200, response, "Review added to the product"));
 })
 
-export {getAllProducts, getProductByCategory, addProduct, deleteProduct, updateProduct, getProductById, getProductByPriceRangeOfPartCategory, addReviewInProduct}
+const mostPopularProducts = asyncHandler(async(req, res) => {
+    const popularProducts = await Product.find()
+            .sort({ unitsSold: -1 }) 
+            .limit(8);
+
+    if(!popularProducts) {
+        throw new ApiError(500, "Something went wrong while fetching most popular product data");
+    }
+
+    if(popularProducts?.length === 0) {
+        return res
+        .status(200)
+        .json(new ApiResponse(200, "No products in database"));
+    }
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, popularProducts, "Most popular products data fetched successfully"));
+})
+
+const newItems = asyncHandler(async(req, res) => {
+    const newItemsData = await Product.find()
+            .sort({ createdAt: -1 }) 
+            .limit(8);
+
+    if(!newItemsData) {
+        throw new ApiError(500, "Something went wrong while fetching new items data");
+    }
+
+    if(newItemsData.length === 0) {
+        return res
+        .status(200)
+        .json(new ApiResponse(200, "No products in database"));
+    }
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, newItemsData, "New Items data fetched successfully"));
+})
+
+export {getAllProducts, getProductByCategory, addProduct, deleteProduct, updateProduct, getProductById, getProductByPriceRangeOfPartCategory, addReviewInProduct, mostPopularProducts,newItems}
