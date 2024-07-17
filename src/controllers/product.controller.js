@@ -64,7 +64,7 @@ const getAllProducts = asyncHandler(async(req, res) => {
 })
 
 const getProductByCategory = asyncHandler(async (req, res) => {
-    const { categoryId } = req.body;
+    const { categoryId } = req.params;
     let { page = 1, limit = 10, query, sortType = "dsc" } = req.query;
     page = isNaN(page) ? 1 : Number(page);
     limit = isNaN(limit) ? 10 : Number(limit);
@@ -300,10 +300,10 @@ const updateProduct = asyncHandler(async(req, res) => {
     // }
 
     let { productId } = req.params
-    let { name, description, features, specifications, price, unitsSold, stock, categoryId, offer} = req.body
+    let { name, description, features, specifications, actualPrice, salePrice, unitsSold, stock, categoryId, offer} = req.body
     let {files} = req;
 
-    if(name && description && features && specifications && price && stock && categoryId) {
+    if(name && description && features && specifications && actualPrice && salePrice && stock && categoryId) {
         if(!isValidObjectId(categoryId)) {
             if(files) deleteImages(files)
             throw new ApiError(400, "Category Id is invalid")
@@ -319,9 +319,10 @@ const updateProduct = asyncHandler(async(req, res) => {
             .json(new ApiResponse(200, "Category not fount"))
         }
     
-        features = JSON.parse(features)
-        specifications = JSON.parse(specifications);
-        price = Number(price);
+        // features = JSON.parse(features)
+        // specifications = JSON.parse(specifications);
+        actualPrice = Number(actualPrice);
+        salePrice = Number(salePrice)
         stock = Number(stock);
         if(offer) {
             offer = Number(offer)
@@ -332,46 +333,49 @@ const updateProduct = asyncHandler(async(req, res) => {
             description, 
             features,
             specifications,
-            price, 
+            actualPrice,
+            salePrice, 
             stock, 
             images: files,
             offer: offer ? offer : null,
         })
 
         if (!validation.success) {
-            if(files) deleteImages(files)
-            const {
-            name,
-            description,
-            features,
-            specifications,
-            price,
-            unitsSold,
-            stock,
-            category,
-            images,
-            offer,
-            ratingsReviews,
-            availability,
-            } = validation.error.format();
-        
-            return res.status(400).json({
-            error: "Validation error",
-            details: {
-                name: name?._errors[0] || "",
-                description: description?._errors[0] || "",
-                features: features?._errors[0] || "",
-                specifications: specifications?._errors[0] || "",
-                price: price?._errors[0] || "",
-                unitsSold: unitsSold?._errors[0] || "",
-                stock: stock?._errors[0] || "",
-                category: category?._errors[0] || "",
-                images: images?._errors[0] || "",
-                offer: offer?._errors[0] || "",
-                ratingsReviews: ratingsReviews?._errors[0] || "",
-                availability: availability?._errors[0] || "",
-            },
-            });
+            if(files.length > 0) deleteImages(files)
+                const {
+                  name,
+                  description,
+                  features,
+                  specifications,
+                  actualPrice,
+                  salePrice,
+                  unitsSold,
+                  stock,
+                  category,
+                  images,
+                  offer,
+                  ratingsReviews,
+                  availability,
+                } = validation.error.format();
+              
+                return res.status(400).json({
+                  error: "Validation error",
+                  details: {
+                    name: name?._errors[0] || "",
+                    description: description?._errors[0] || "",
+                    features: features || "",
+                    specifications: specifications || "",
+                    actualPrice: actualPrice?._errors[0] || "",
+                    salePrice: salePrice?._errors[0] || "",
+                    unitsSold: unitsSold?._errors[0] || "",
+                    stock: stock?._errors[0] || "",
+                    category: category?._errors[0] || "",
+                    images: images?._errors[0] || "",
+                    offer: offer?._errors[0] || "",
+                    ratingsReviews: ratingsReviews?._errors[0] || "",
+                    availability: availability?._errors[0] || "",
+                  },
+                });
         }
 
         let product = await Product.findById({_id: productId});
@@ -432,7 +436,8 @@ const updateProduct = asyncHandler(async(req, res) => {
             description,
             features,
             specifications,
-            price,
+            actualPrice,
+            salePrice,
             stock,
             categoryId,
             offer: offer ? offer:null,
@@ -606,4 +611,4 @@ const bestSeller = asyncHandler(async(req, res) => {
 
 
 
-export {getAllProducts, getProductByCategory, addProduct, deleteProduct, updateProduct, getProductById, getProductByPriceRangeOfPartCategory, addReviewInProduct, mostPopularProducts,newItems}
+export {getAllProducts, getProductByCategory, addProduct, deleteProduct, updateProduct, getProductById, getProductByPriceRangeOfPartCategory, addReviewInProduct, mostPopularProducts,newItems, bestSeller}

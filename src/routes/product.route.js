@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getAllProducts, getProductByCategory, addProduct, deleteProduct, updateProduct, getProductById, getProductByPriceRangeOfPartCategory, addReviewInProduct, mostPopularProducts, newItems} from "../controllers/product.controller.js";
+import { getAllProducts, getProductByCategory, addProduct, deleteProduct, updateProduct, getProductById, getProductByPriceRangeOfPartCategory, addReviewInProduct, mostPopularProducts, newItems, bestSeller} from "../controllers/product.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middlware.js";
 
@@ -7,7 +7,7 @@ const router = Router()
 
 router.route("/all-products").get(getAllProducts);
 
-router.route("/product-by-category").post(getProductByCategory);
+router.route("/product-by-category/:categoryId").post(getProductByCategory);
 
 router.route("/add-product").post(
     // verifyJWT,
@@ -29,12 +29,12 @@ router.route("/add-product").post(
 )
 
 router.route("/delete-product/:productId").get(
-    verifyJWT,
+    // verifyJWT,
     deleteProduct
 );
 
 router.route("/update-product/:productId").post(
-    verifyJWT,
+    // verifyJWT,
     upload.fields([
         {
             name: "image1",
@@ -63,5 +63,7 @@ router.route("/add-review").post(
 router.route("/most-popular-products").get(mostPopularProducts);
 
 router.route("/new-items").get(newItems);
+
+router.route("/best-seller").get(bestSeller);
 
 export default router
