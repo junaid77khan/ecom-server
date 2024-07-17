@@ -35,9 +35,13 @@ const productSchema = new mongoose.Schema({
       required: true
     }]
   },
-  price: {
+  actualPrice: {
     type: Number,
-    required: true,
+    required: [true, "Actual price is required"],
+  },
+  salePrice: {
+    type: Number,
+    required: [true, "Sale price is required"],
   },
   unitsSold: {
     type: Number,

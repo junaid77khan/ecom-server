@@ -62,13 +62,13 @@ const getAllCategories = asyncHandler(async(req, res) => {
 const addCategory = asyncHandler( async(req, res) => {
     const user = req?.user;
 
-    if(!user || !user?.isAdmin) {
-        return res.status(403).json({
-            error: "Unauthorized access",
-            message: "Access to this resource is restricted to administrators only"
-        });
-    }
-
+    // if(!user || !user?.isAdmin) {
+    //     return res.status(403).json({
+    //         error: "Unauthorized access",
+    //         message: "Access to this resource is restricted to administrators only"
+    //     });
+    // }
+    console.log(req.files);
     const{name, description} = req.body;
     const imageLocalPath = req.files?.image[0].path;
 

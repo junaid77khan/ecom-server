@@ -107,23 +107,23 @@ const getProductByCategory = asyncHandler(async (req, res) => {
 const addProduct = asyncHandler(async(req, res) => {
     const user = req?.user;
 
-    if(!user || !user?.isAdmin) {
-        return res.status(403).json({
-            error: "Unauthorized access",
-            message: "Access to this resource is restricted to administrators only"
-        });
-    }
+    // if(!user || !user?.isAdmin) {
+    //     return res.status(403).json({
+    //         error: "Unauthorized access",
+    //         message: "Access to this resource is restricted to administrators only"
+    //     });
+    // }
 
-    let {name, description, features, specifications, price, stock, categoryId, offer} = req.body;
+    let {name, description, features, specifications, actualPrice, salePrice, stock, categoryId, offer} = req.body;
     const {files} = req;
 
-    if(!name || !description || !features || !specifications || !price || !stock || !categoryId) {
-        if(files) deleteImages(files)
+    if(!name || !description || !features || !specifications || !actualPrice || !salePrice || !stock || !categoryId) {
+        if(files.length > 0) deleteImages(files)
         throw new ApiError(404, "Please provide data of required fields");
     }
 
     if(!isValidObjectId(categoryId)) {
-        if(files) deleteImages(files)
+        if(files.length > 0) deleteImages(files)
         throw new ApiError(400, "Category Id is invalid")
     }
 
@@ -132,43 +132,45 @@ const addProduct = asyncHandler(async(req, res) => {
     const category = await Category.findById({_id: categoryId});
 
     if(!category) {
-        if(files) deleteImages(files)
+        if(files.length > 0) deleteImages(files)
         return res
         .json(new ApiResponse(200, "Category not fount"))
     }
 
     if(!files['image1'] || !files['image2'] || !files['image3']) {
-        if(files) deleteImages(files)
+        if(files.length > 0) deleteImages(files)
         throw new ApiError(404, "Please provide exact 3 images of product");
     }
 
-    features = JSON.parse(features)
-    specifications = JSON.parse(specifications);
-    price = Number(price);
+    // features = JSON.parse(features)
+    // specifications = JSON.parse(specifications);
+    actualPrice = Number(actualPrice);
+    salePrice = Number(salePrice);
     stock = Number(stock);
     if(offer) {
         offer = Number(offer)
     }
-    
     const validation = ProductSchema.safeParse({
         name, 
         description, 
         features,
         specifications,
-        price, 
+        actualPrice,
+        salePrice, 
         stock, 
         images: files,
         offer: offer ? offer : null,
     })
 
     if (!validation.success) {
-        if(files) deleteImages(files)
+        if(files.length > 0) deleteImages(files)
         const {
           name,
           description,
           features,
           specifications,
-          price,
+          actualPrice,
+          salePrice,
           unitsSold,
           stock,
           category,
@@ -183,9 +185,10 @@ const addProduct = asyncHandler(async(req, res) => {
           details: {
             name: name?._errors[0] || "",
             description: description?._errors[0] || "",
-            features: features?._errors[0] || "",
-            specifications: specifications?._errors[0] || "",
-            price: price?._errors[0] || "",
+            features: features || "",
+            specifications: specifications || "",
+            actualPrice: actualPrice?._errors[0] || "",
+            salePrice: salePrice?._errors[0] || "",
             unitsSold: unitsSold?._errors[0] || "",
             stock: stock?._errors[0] || "",
             category: category?._errors[0] || "",
@@ -214,7 +217,8 @@ const addProduct = asyncHandler(async(req, res) => {
         description,
         features,
         specifications,
-        price,
+        actualPrice,
+        salePrice,
         stock,
         categoryId,
         images: cloudinaryImagesURL,
@@ -236,12 +240,12 @@ const addProduct = asyncHandler(async(req, res) => {
 const deleteProduct = asyncHandler(async(req, res) => {
     const user = req?.user;
 
-    if(!user || !user?.isAdmin) {
-        return res.status(403).json({
-            error: "Unauthorized access",
-            message: "Access to this resource is restricted to administrators only"
-        });
-    }
+    // if(!user || !user?.isAdmin) {
+    //     return res.status(403).json({
+    //         error: "Unauthorized access",
+    //         message: "Access to this resource is restricted to administrators only"
+    //     });
+    // }
 
     const {productId} = req.params;
 
@@ -288,12 +292,12 @@ const deleteProduct = asyncHandler(async(req, res) => {
 const updateProduct = asyncHandler(async(req, res) => {
     const user = req?.user;
 
-    if(!user || !user?.isAdmin) {
-        return res.status(403).json({
-            error: "Unauthorized access",
-            message: "Access to this resource is restricted to administrators only"
-        });
-    }
+    // if(!user || !user?.isAdmin) {
+    //     return res.status(403).json({
+    //         error: "Unauthorized access",
+    //         message: "Access to this resource is restricted to administrators only"
+    //     });
+    // }
 
     let { productId } = req.params
     let { name, description, features, specifications, price, unitsSold, stock, categoryId, offer} = req.body
@@ -579,5 +583,27 @@ const newItems = asyncHandler(async(req, res) => {
         .status(200)
         .json(new ApiResponse(200, newItemsData, "New Items data fetched successfully"));
 })
+
+const bestSeller = asyncHandler(async(req, res) => {
+    const bestSellerProduct = await Product.find()
+            .sort({ unitsSold: -1 }) 
+            .limit(1);
+
+    if(!bestSellerProduct) {
+        throw new ApiError(500, "Something went wrong while fetching best seller product data");
+    }
+
+    if(bestSellerProduct?.length === 0) {
+        return res
+        .status(200)
+        .json(new ApiResponse(200, "No products in database"));
+    }
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, bestSellerProduct, "Best seller product data fetched successfully"));
+})
+
+
 
 export {getAllProducts, getProductByCategory, addProduct, deleteProduct, updateProduct, getProductById, getProductByPriceRangeOfPartCategory, addReviewInProduct, mostPopularProducts,newItems}

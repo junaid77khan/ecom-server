@@ -14,9 +14,9 @@ export const nameSchema = z
 
 export const descriptionSchema = z.string().max(3000, "Description must be 3000 characters or less")
 
-export const featuresSchema = z.array(z.string().min(1, "Feature is required").max(10, "No more than 10 features allowed"));
+export const featuresSchema = z.array(z.string()).min(1, "Feature is required").max(10, "No more than 10 features allowed");
 
-export const priceSchema = z.number().positive("Price must be a positive number").min(0.01, "Price must be greater than zero");
+export const priceSchema = z.number().positive("Price must be a positive number").min(0, "Price must be greater than zero");
 
 export const unitsSoldSchema = z.number().int("Units sold must be an integer").positive("Units sold must be positive").default(0).optional();
 
@@ -66,7 +66,8 @@ export const ratingsReviewsSchema = z.array(
     description: descriptionSchema,
     features: featuresSchema,
     specifications: specificationSchema,
-    price: priceSchema,
+    actualPrice: priceSchema,
+    salePrice: priceSchema,
     unitsSold: unitsSoldSchema,
     stock: stockSchema,
     images: ImageArraySchema,

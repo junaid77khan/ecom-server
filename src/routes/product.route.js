@@ -10,7 +10,7 @@ router.route("/all-products").get(getAllProducts);
 router.route("/product-by-category").post(getProductByCategory);
 
 router.route("/add-product").post(
-    verifyJWT,
+    // verifyJWT,
     upload.fields([
         {
             name: "image1",
