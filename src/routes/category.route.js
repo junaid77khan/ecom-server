@@ -8,7 +8,7 @@ const router = Router()
 router.route("/all-categories").get(getAllCategories);
 
 router.route("/add-category").post(
-    verifyJWT,
+    // verifyJWT,
     upload.fields([
         {
             name: "image",
