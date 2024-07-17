@@ -83,7 +83,7 @@ const getProductByCategory = asyncHandler(async (req, res) => {
     const products = await Product.aggregate([
         {
             $match: {
-                category: new mongoose.Types.ObjectId(categoryId)
+                categoryId: new mongoose.Types.ObjectId(categoryId)
             }
         },
         {
@@ -455,7 +455,6 @@ const updateProduct = asyncHandler(async(req, res) => {
 
 const getProductById = asyncHandler(async(req, res) => {
     const {productId} = req.params;
-    console.log(productId);
     if(!productId || !isValidObjectId(productId)) {
         throw new ApiError(404, "No product Id received or product Id is invalid")
     }
@@ -467,8 +466,18 @@ const getProductById = asyncHandler(async(req, res) => {
         .json(new ApiResponse(200, "No product found"))
     }
 
+    const relatedProducts = await Product.find({
+        categoryId: product.categoryId,
+        _id: { $ne: productId } 
+      }).limit(4);
+
+    if(!relatedProducts) {
+        return res
+        .json(new ApiResponse(200, "Something went wrong while fetching related products"))
+    }
+
     return res
-    .json(new ApiResponse(200, product, "Product data fetched successfully"));
+    .json(new ApiResponse(200, {"product":product, "relatedProducts": relatedProducts}, "Product data fetched successfully"));
 })
 
 const getProductByPriceRangeOfPartCategory = asyncHandler(async(req, res) => {

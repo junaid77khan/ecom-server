@@ -7,7 +7,7 @@ const router = Router()
 
 router.route("/all-products").get(getAllProducts);
 
-router.route("/product-by-category/:categoryId").post(getProductByCategory);
+router.route("/product-by-category/:categoryId").get(getProductByCategory);
 
 router.route("/add-product").post(
     // verifyJWT,
