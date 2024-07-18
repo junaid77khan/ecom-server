@@ -18,6 +18,7 @@ const UsernameSchema = z.object({
 
 const signup = asyncHandler( async(req, res) => {
     const {username, email, password} = req.body;
+    console.log(req.body);
 
     const validation = signupSchema.safeParse(req.body);
 
@@ -162,28 +163,27 @@ const signup = asyncHandler( async(req, res) => {
 } )
 
 const verifyCode = asyncHandler(async(req, res) => {
-        const { username, code } = req.body;
+        let { code } = req.body;
+        let curUser = req.user;
+
+        if(!curUser) {
+            throw new ApiError(400, "User not found");
+        }
+
+        const username = curUser.username;
 
         const usernameValidationResult = UsernameSchema.safeParse({ username });
         const codeValidationResult = verifySchema.safeParse({ code });
 
-        console.log(usernameValidationResult); // TODO: Remove
-        console.log(codeValidationResult);
-
         if (!usernameValidationResult.success) {
-            const usernameErrors = usernameValidationResult.error.format().username?._errors || [];
-            return res
-            .status(400)
-            .json(
-               new ApiResponse(400, {message: usernameErrors?.length > 0 ? usernameErrors.join(', ') : "Invalid username"})
-            );
+            const usernameErrors = usernameValidationResult.error.format().username?._errors[0] || [];
+            throw new ApiError(400, {message: usernameErrors?.length > 0 ? usernameErrors.join(', ') : "Invalid username"})
         }
 
         if (!codeValidationResult.success) {
+            console.log(codeValidationResult.error.format().code);
             const codeErrors = codeValidationResult.error.format().code?._errors || [];
-            return res.json(
-                new ApiResponse(400, {message: codeErrors?.length > 0 ? codeErrors.join(', ') : "Invalid code"})
-            );
+            throw new ApiError(400, {message: codeErrors?.length > 0 ? codeErrors.join(', ') : "Invalid code"})
         }
 
         const validUsername = usernameValidationResult.data.username;
@@ -192,11 +192,7 @@ const verifyCode = asyncHandler(async(req, res) => {
         const user = await User.findOne({ username: validUsername });
 
         if (!user) {
-            return res
-            .status(404)
-            .json(
-                new ApiResponse(404, "User not found")
-            );
+            throw new ApiError(404, "User not found")
         }
 
         if(user.isVerified) {
@@ -208,7 +204,11 @@ const verifyCode = asyncHandler(async(req, res) => {
         }
 
         const isCodeValid = (user.verifyCode === validCode);
-        const isCodeNotExpired = (new Date(user.verifyCodeExpiry) > new Date());
+        const expiryDate = new Date(user.verifyCodeExpiry);
+        if (isNaN(expiryDate)) {
+            throw new ApiError(404, "Something went wrong")
+        }
+        const isCodeNotExpired = (new Date(expiryDate) >= new Date());
 
         if (isCodeValid && isCodeNotExpired) {
             user.isVerified = true;
@@ -312,4 +312,91 @@ const signin = asyncHandler(async(req, res) => {
         )
     )
 })
-export {signup, verifyCode, signin};
+
+const refreshAccessToken = asyncHandler( async(req, res) => {
+    const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken
+
+    if(!incomingRefreshToken) {
+        throw new ApiError(401, "Unauthorized request")
+    }
+
+    try {
+        const decodedToken = jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET)
+    
+        const user = await User.findById(decodedToken._id)
+    
+        if(!user) {
+            throw new ApiError(401, "Invalid refresh token")
+        }
+    
+        if(user?.refreshToken !== incomingRefreshToken) {
+            throw new ApiError(401, "Refresh Token is Expired or used")
+        }
+    
+        const{accessToken, newRefreshToken} = await generateAccessAndRefreshTken(user._id)
+    
+        const options = {
+            httpOnly: true,
+            secure: true
+        }
+    
+        return res
+        .status(200)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", newRefreshToken, options)
+        .json(
+            new ApiResponse( 
+                200, 
+                {accessToken, refreshToken: newRefreshToken},
+                "Refresh token is refreshed"
+            )
+        )
+    } catch (error) {
+        throw new ApiError(401, error.message || "Invalid refresh token")
+    }
+
+} )
+
+const logout = asyncHandler( async(req, res) => {
+    const user = await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            $unset: {
+                refreshToken:1 
+            }
+        },
+        {
+            new: true
+        }
+    )
+
+    const options = {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'None',
+    }
+
+    return res
+    .status(200)
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
+    .json(
+        new ApiResponse(
+            200, user, "User logout succesfully"
+        )
+    )
+} )
+
+const isUserLoggedIn = asyncHandler( async(req, res) => {
+    const token = req.cookies.accessToken
+    let isAuthenticated = false;
+    if(token) {
+        isAuthenticated = true;
+    }
+
+    return res
+    .status(200)
+    .json(new ApiResponse(200, {"isAuthenticated": isAuthenticated}, "Data fetched successfully"));
+} )  
+
+export {signup, verifyCode, signin, refreshAccessToken, logout, isUserLoggedIn};
