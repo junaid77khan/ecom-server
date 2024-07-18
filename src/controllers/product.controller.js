@@ -83,7 +83,7 @@ const getProductByCategory = asyncHandler(async (req, res) => {
     const products = await Product.aggregate([
         {
             $match: {
-                category: new mongoose.Types.ObjectId(categoryId)
+                categoryId: new mongoose.Types.ObjectId(categoryId)
             }
         },
         {
@@ -455,20 +455,30 @@ const updateProduct = asyncHandler(async(req, res) => {
 
 const getProductById = asyncHandler(async(req, res) => {
     const {productId} = req.params;
-    console.log(productId);
     if(!productId || !isValidObjectId(productId)) {
         throw new ApiError(404, "No product Id received or product Id is invalid")
     }
 
-    const product = await Product.findById({_id: productId}).populate('categoryId');
+    const product = await Product.findById(productId)
+        .populate('categoryId')
 
     if(!product) {
         return res
         .json(new ApiResponse(200, "No product found"))
     }
 
+    const relatedProducts = await Product.find({
+        categoryId: product.categoryId,
+        _id: { $ne: productId } 
+      }).limit(4);
+
+    if(!relatedProducts) {
+        return res
+        .json(new ApiResponse(200, "Something went wrong while fetching related products"))
+    }
+
     return res
-    .json(new ApiResponse(200, product, "Product data fetched successfully"));
+    .json(new ApiResponse(200, {"product":product, "relatedProducts": relatedProducts}, "Product data fetched successfully"));
 })
 
 const getProductByPriceRangeOfPartCategory = asyncHandler(async(req, res) => {
@@ -530,23 +540,46 @@ const addReviewInProduct = asyncHandler(async(req, res) => {
         return res
         .json(new ApiResponse(404, "No user found"))
     }
-    if(user._id !== req.user._id) {
-        return res
-        .json(new ApiResponse(400, "Logged In user and provided userId does not match"))
-    }
+    // if(user._id.toString() !== req.user._id.toString()) {
+    //     return res
+    //     .json(new ApiResponse(400, "Logged In user and provided userId does not match"))
+    // }
+    
     product.ratingsReviews.push({
         review,
         user: user._id,
         rating,
-        createdAt: new Date.now()
-    })
-    const response = await product.save();
-    if(!response) {
-        return res
-        .json(new ApiResponse(404, "Something went wrong while adding review"));
-    } 
+        createdAt: Date.now()
+    });
+    
+    await product.save();
+
     return res
-        .json(new ApiResponse(200, response, "Review added to the product"));
+        .json(new ApiResponse(200, "Review added to the product"));
+})
+
+const getReviewsOfProduct = asyncHandler(async(req, res) => {
+    const{productId} = req.params;
+
+    if(!productId || !isValidObjectId(productId)) {
+        throw new ApiError(400, "Product is not received or it is invalid");
+    }
+
+    const product = await Product.findById({_id: productId})
+        .populate({
+            path: 'ratingsReviews.user',
+            select: 'username email' 
+        });
+
+    if(!product) {
+        return res
+        .status(200)
+        .json(new ApiResponse(200, "Product not found"));
+    }
+
+    return res
+    .status(200)
+    .json(new ApiResponse(200, {"ratingsReviews": product.ratingsReviews}, "Product reviews fetched successfully"))
 })
 
 const mostPopularProducts = asyncHandler(async(req, res) => {
@@ -611,4 +644,4 @@ const bestSeller = asyncHandler(async(req, res) => {
 
 
 
-export {getAllProducts, getProductByCategory, addProduct, deleteProduct, updateProduct, getProductById, getProductByPriceRangeOfPartCategory, addReviewInProduct, mostPopularProducts,newItems, bestSeller}
+export {getAllProducts, getProductByCategory, addProduct, deleteProduct, updateProduct, getProductById, getProductByPriceRangeOfPartCategory, addReviewInProduct, getReviewsOfProduct, mostPopularProducts,newItems, bestSeller}

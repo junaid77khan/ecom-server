@@ -1,7 +1,4 @@
 import mongoose from 'mongoose';
-import { asyncHandler } from '../utils/AsyncHandler.js';
-import { Cart } from './cart-model.js';
-import { destroyOnCloudinary } from '../utils/cloudinary.js';
 
 const specificationSchema = new mongoose.Schema({
   name: {
@@ -71,12 +68,37 @@ const productSchema = new mongoose.Schema({
     {
       review: String,
       user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-      rating: Number,
+      rating: {
+        type: Number,
+        min: 1,
+        max: 5,
+        required: true,
+      },
       createdAt: {
         type: Date,
         default: Date.now(),
       },
     },
   ],
+  avgRating: {
+    type: Number,
+    default: 0, // Default average rating is 0
+  },
 }, { timestamps: true });
+
+productSchema.methods.calculateAverageRating = function () {
+  const ratingsCount = this.ratingsReviews.length;
+  if (ratingsCount === 0) {
+    this.avgRating = 0;
+  } else {
+    const sum = this.ratingsReviews.reduce((acc, curr) => acc + curr.rating, 0);
+    this.avgRating = sum / ratingsCount;
+  }
+};
+
+productSchema.pre('save', function (next) {
+  this.calculateAverageRating();
+  next();
+});
+
 export const Product = mongoose.model('Product', productSchema);
