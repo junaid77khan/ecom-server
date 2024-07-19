@@ -441,10 +441,15 @@ const isUserLoggedIn = asyncHandler( async(req, res) => {
     if(token) {
         isAuthenticated = true;
     }
+    let isAdmin = false;
+    if(isAuthenticated) {
+        let user = req.user;
+        isAdmin = user.isAdmin;
+    }
 
     return res
     .status(200)
-    .json(new ApiResponse(200, {"isAuthenticated": isAuthenticated}, "Data fetched successfully"));
+    .json(new ApiResponse(200, {"isAuthenticated": isAuthenticated, "isAdmin": isAdmin}, "Data fetched successfully"));
 } )  
 
 export {signup, sendVerificationCode, verifyCode, signin, refreshAccessToken, logout, isUserLoggedIn};
