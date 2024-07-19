@@ -519,10 +519,16 @@ const getProductByPriceRangeOfPartCategory = asyncHandler(async(req, res) => {
 })
 
 const addReviewInProduct = asyncHandler(async(req, res) => {
-    let {productId, userId, rating, review} = req.body;
+    let {productId, rating, review} = req.body;
 
-    if(!productId || !userId || !rating || !review || !isValidObjectId(productId) || !isValidObjectId(userId)) {
+    if(!productId || !rating || !review || !isValidObjectId(productId)) {
         throw new ApiError(400, "ProductId, UserId, rating and review each are required and each should be valid");
+    }
+
+    let user = req.user;
+    console.log(user);
+    if(!user) {
+        throw new ApiError(400, "No user found");
     }
 
     rating = Number(rating);
@@ -535,15 +541,6 @@ const addReviewInProduct = asyncHandler(async(req, res) => {
         return res
         .json(new ApiResponse(404, "No product found"))
     }
-    let user = await User.findById({_id: userId});
-    if(!user) {
-        return res
-        .json(new ApiResponse(404, "No user found"))
-    }
-    // if(user._id.toString() !== req.user._id.toString()) {
-    //     return res
-    //     .json(new ApiResponse(400, "Logged In user and provided userId does not match"))
-    // }
     
     product.ratingsReviews.push({
         review,

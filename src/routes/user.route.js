@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { signup, verifyCode, signin, refreshAccessToken, logout, isUserLoggedIn } from "../controllers/user.controller.js";
+import { signup, sendVerificationCode, verifyCode, signin, refreshAccessToken, logout, isUserLoggedIn } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middlware.js";
 
@@ -9,8 +9,11 @@ router.route("/signup").post(
     signup
 )
 
+router.route("/resend-code").post(
+    sendVerificationCode
+)
+
 router.route("/verify-user").post(
-    verifyJWT,
     verifyCode
 )
 
