@@ -77,7 +77,6 @@ const productSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 productSchema.methods.calculateAverageRating = async function () {
-  console.log("Calculating avg");
   const Review = mongoose.model('Review');
 
   try {
