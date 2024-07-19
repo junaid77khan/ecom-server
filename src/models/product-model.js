@@ -66,19 +66,9 @@ const productSchema = new mongoose.Schema({
   },
   ratingsReviews: [
     {
-      review: String,
-      user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-      rating: {
-        type: Number,
-        min: 1,
-        max: 5,
-        required: true,
-      },
-      createdAt: {
-        type: Date,
-        default: Date.now(),
-      },
-    },
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Review'
+    }
   ],
   avgRating: {
     type: Number,
@@ -86,19 +76,32 @@ const productSchema = new mongoose.Schema({
   },
 }, { timestamps: true });
 
-productSchema.methods.calculateAverageRating = function () {
-  const ratingsCount = this.ratingsReviews.length;
-  if (ratingsCount === 0) {
-    this.avgRating = 0;
-  } else {
-    const sum = this.ratingsReviews.reduce((acc, curr) => acc + curr.rating, 0);
-    this.avgRating = sum / ratingsCount;
+productSchema.methods.calculateAverageRating = async function () {
+  console.log("Calculating avg");
+  const Review = mongoose.model('Review');
+
+  try {
+    const reviews = await Review.find({ _id: { $in: this.ratingsReviews } }).exec();
+
+    if (reviews.length === 0) {
+      this.avgRating = 5; 
+    } else {
+      const totalRating = reviews.reduce((acc, curr) => acc + curr.rating, 0);
+      this.avgRating = totalRating / reviews.length;
+    }
+  } catch (error) {
+    console.error('Error calculating average rating:', error);
   }
 };
 
-productSchema.pre('save', function (next) {
-  this.calculateAverageRating();
-  next();
+
+productSchema.pre('save', async function (next) {
+  try {
+    await this.calculateAverageRating();
+    console.log("Product avg rating", this.avgRating);
+  } catch (error) {
+    next(error);
+  }
 });
 
 export const Product = mongoose.model('Product', productSchema);
