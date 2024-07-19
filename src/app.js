@@ -4,7 +4,7 @@ import cookieParser from 'cookie-parser';
 const app = express()
 
 const corsConfig = {
-    origin: 'http://localhost:7000',
+    origin: 'https://ecom-candle-decor.vercel.app',
     credentials: true,
     methods: ["GET", "POST", "DELETE", "PUT"]
 }; 
