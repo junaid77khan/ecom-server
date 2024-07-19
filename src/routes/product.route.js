@@ -56,7 +56,7 @@ router.route("/product-by-Id/:productId").get(getProductById);
 router.route("/product-in-range-category").post(getProductByPriceRangeOfPartCategory);
 
 router.route("/add-review").post(
-    // verifyJWT,
+    verifyJWT,
     addReviewInProduct
 );
 
