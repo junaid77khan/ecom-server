@@ -4,7 +4,7 @@ import cookieParser from 'cookie-parser';
 const app = express()
 
 const corsConfig = {
-    origin: ['http://localhost:7000', 'http://localhost:5174/', 'https://ecom-candle-decor-admin.vercel.app', 'https://ecom-candle-decor.vercel.app'],
+    origin: ['https://669c19289b863d678e4adcac--earnest-gaufre-91598d.netlify.app', 'http://localhost:7000', 'http://localhost:5174', 'https://ecom-candle-decor-admin.vercel.app', 'https://ecom-candle-decor.vercel.app'],
     credentials: true,
     methods: ["GET", "POST", "DELETE", "PUT"]
 }; 
