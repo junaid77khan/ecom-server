@@ -9,6 +9,22 @@ import { Product } from "../models/product-model.js";
 import { Cart } from "../models/cart-model.js";
 import { ParseStatus } from "zod";
 
+const deleteImages = (files) => {
+    try {
+        if (files['image'] && files['image'][0]) {
+            const filePath = files['image'][0].path;
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+                console.log(`Deleted ${filePath}`);
+            } else {
+                console.warn(`File ${filePath} not found`);
+            }
+        }
+    } catch (err) {
+        console.error('Error deleting files:', err);
+    }
+};
+
 const getAllCategories = asyncHandler(async(req, res) => {
     let { page = 1, limit = 10, query, sortType="asc" } = req.query
     page = isNaN(page) ? 1 : Number(page);
@@ -138,12 +154,12 @@ const addCategory = asyncHandler( async(req, res) => {
 const deleteCategory = asyncHandler(async(req, res) => {
     const user = req?.user;
 
-    if(!user || !user?.isAdmin) {
-        return res.status(403).json({
-            error: "Unauthorized access",
-            message: "Access to this resource is restricted to administrators only"
-        });
-    }
+    // if(!user || !user?.isAdmin) {
+    //     return res.status(403).json({
+    //         error: "Unauthorized access",
+    //         message: "Access to this resource is restricted to administrators only"
+    //     });
+    // }
 
     const {categoryId} = req.params;
     // const {categoryId} = req.body;
@@ -202,65 +218,72 @@ const deleteCategory = asyncHandler(async(req, res) => {
 const updateCategory = asyncHandler(async(req, res) => {
     const user = req?.user;
 
-    if(!user || !user?.isAdmin) {
-        return res.status(403).json({
-            error: "Unauthorized access",
-            message: "Access to this resource is restricted to administrators only"
-        });
-    }
+    // if(!user || !user?.isAdmin) {
+    //     return res.status(403).json({
+    //         error: "Unauthorized access",
+    //         message: "Access to this resource is restricted to administrators only"
+    //     });
+    // }
 
     const { categoryId } = req.params
     const { name, description } = req.body
-    const imageLocalPath = req.files?.image[0].path;
+    let {files} = req;
 
-    if( !name && !description && !imageLocalPath) {
-        throw new ApiError(404, "No updated data received")
-    }
-    
-    const validation = categorySchema.safeParse({name, description, image: req.files});
+    if( name && description && !files) {
+        if(!isValidObjectId(categoryId)) {
+            if(files) deleteImages(files)
+            throw new ApiError(400, "Category Id is invalid")
+        }
 
-    if (!validation.success) {
-        const nameError = validation.error.format().name?._errors?.[0] || "";
-        const descriptionError = validation.error.format().description?._errors?.[0] || "";
-        const imageError = validation.error.format().image?._errors?.[0] || "";
+        const validation = categorySchema.safeParse({name, description, image: files});
 
-        return res.status(400).json({
-            error: "Validation error",
-            details: {
-                nameError,
-                descriptionError,
-                imageError
+        if (!validation.success) {
+            const nameError = validation.error.format().name?._errors?.[0] || "";
+            const descriptionError = validation.error.format().description?._errors?.[0] || "";
+            const imageError = validation.error.format().image?._errors?.[0] || "";
+
+            return res.status(400).json({
+                error: "Validation error",
+                details: {
+                    nameError,
+                    descriptionError,
+                    imageError
+                }
+            });
+        }
+
+        const category = await Category.findById(categoryId)
+
+        if(!category) {
+            throw new ApiError(404, "No Category exists")
+        }
+
+        if(files['image']) {
+            const response = destroyOnCloudinary(category.image);
+            if(!response) {
+                return res.
+                json(new ApiResponse(200, response, "Something went wrong while deleting images"))
             }
-        });
+            const cloudinaryResponse = await uploadOnCloudinary(files.image[0].path);
+            if(!cloudinaryResponse) {
+                throw new ApiError(400, "Something went wrong while uploading image")
+            }
+            category.image = cloudinaryResponse.url;
+            await category.save();
+        }
+
     }
 
-    const category = await Category.findById(categoryId)
-
-    if(!category) {
-        throw new ApiError(404, "No Category exists")
-    }
-
-    const cloudinaryReponse = await uploadOnCloudinary(imageLocalPath)
-
-    if(!cloudinaryReponse) {
-        throw new ApiError(500, "Something went wrong while uploading thumbnail")
-    }
-
-    const oldImageUrl = category?.image;
-
-    const updatedCategory = await Category.findByIdAndUpdate(
+    await Category.findByIdAndUpdate(
         categoryId,
         {
             $set: {
                 ...(name && { name }), 
-                ...(description && { description }),  
-                ...(cloudinaryReponse && cloudinaryReponse.url && { image: cloudinaryReponse.url }),
+                ...(description && { description }),
             }
         },
         {new: true}
     )
-
-    await destroyOnCloudinary(oldImageUrl);
 
     return res
     .status(200)

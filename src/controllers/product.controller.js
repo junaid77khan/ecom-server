@@ -143,8 +143,8 @@ const addProduct = asyncHandler(async(req, res) => {
         throw new ApiError(404, "Please provide exact 3 images of product");
     }
 
-    features = JSON.parse(features)
-    specifications = JSON.parse(specifications);
+    // features = JSON.parse(features)
+    // specifications = JSON.parse(specifications);
     actualPrice = Number(actualPrice);
     salePrice = Number(salePrice);
     stock = Number(stock);
@@ -451,6 +451,10 @@ const updateProduct = asyncHandler(async(req, res) => {
         return res
         .json(new ApiResponse(200, updateProduct, "Product updated succesfully"));
     }
+
+    return res
+    .status(400)
+    .json(new ApiResponse(400, "Please provide valid data"))
     
 })
 
