@@ -34,23 +34,27 @@ const addProductInCart = asyncHandler(async(req, res) => {
 
     let cart = await Cart.findOne({ user: user._id });
 
+    let idx = 0;
     if (!cart) {
         cart = await Cart.create({
             user: user._id,
             items: [newItem]
         });
+        idx = 0;
     } else {
         const existingItemIndex = cart.items.findIndex(item => item.product.equals(product._id));
 
         if (existingItemIndex !== -1) {
             cart.items[existingItemIndex].quantity += newItem.quantity;
+            idx = existingItemIndex;
         } else {
             cart.items.push(newItem);
+            idx = cart.items.length-1;
         }
         await cart.save();
     }
 
-    res.status(200).json(new ApiResponse(200, "Product is added in cart successfully", cart));
+    res.status(200).json(new ApiResponse(200, cart.items[idx], "Product is added in cart successfully"));
 })
 
 const getAllCartProducts = asyncHandler( async(req, res) => {
@@ -58,17 +62,10 @@ const getAllCartProducts = asyncHandler( async(req, res) => {
 
     const cartProducts = await Cart.findOne({user}).populate('items.product', '-updatedAt -createdAt');
 
-    console.log(cartProducts);
-    if(!cartProducts) {
-        return res
-        .status(500)
-        .json(new ApiResponse(500, "Something went wrong during fetching data from database"));
-    }
-
-    if(cartProducts?.items?.length === 0) {
+    if(cartProducts?.items?.length === 0 || !cartProducts) {
         return res
         .status(200)
-        .json(new ApiResponse(200, "No products in cart"));
+        .json(new ApiResponse(200, {"items": []}, "No products in cart"));
     }
 
     return res
@@ -93,15 +90,19 @@ const removeProductFromCart = asyncHandler(async(req, res) => {
         .json(new ApiResponse(200, "No cart found"));
     }
 
+    console.log(cart);
+
     const updatedItems = cart.items.filter((item) => item.product.toString() !== productId.toString());
 
     cart.items = updatedItems;
 
     await cart.save();
 
+    console.log(cart);
+
     return res
         .status(200)
-        .json(new ApiResponse(200, "Product removed from cart"));
+        .json(new ApiResponse(200, cart, "Product removed from cart"));
 })
 
 const updateProductQuantity = asyncHandler(async(req, res) => {

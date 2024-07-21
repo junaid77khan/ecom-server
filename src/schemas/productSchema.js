@@ -22,6 +22,14 @@ export const unitsSoldSchema = z.number().int("Units sold must be an integer").p
 
 export const stockSchema =z.number().int("Stock must be an integer").positive("Stock must be positive").default(0);
 
+export const couponIdSchema = z.object({
+  couponId: z.string().max(20, "Coupon Id must not contains more than 20 characters")
+})
+
+export const discountValueSchema = z.object({
+  discountValue: z.number().min(1, "Discount value must be greater than equals to 1").max(100, "Discount value must be less than 100")
+})
+
 export const ImageArraySchema = z
   .any()
   .refine((files) => {

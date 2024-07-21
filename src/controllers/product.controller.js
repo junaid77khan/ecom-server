@@ -9,6 +9,7 @@ import { uploadOnCloudinary, destroyOnCloudinary } from "../utils/cloudinary.js"
 import mongoose, { isValidObjectId } from "mongoose";
 import fs from 'fs'; 
 import { User } from "../models/user-model.js";
+import { Review } from "../models/review-model.js";
 
 const deleteImages = (files) => {
     try {
@@ -450,6 +451,10 @@ const updateProduct = asyncHandler(async(req, res) => {
         return res
         .json(new ApiResponse(200, updateProduct, "Product updated succesfully"));
     }
+
+    return res
+    .status(400)
+    .json(new ApiResponse(400, "Please provide valid data"))
     
 })
 
@@ -518,42 +523,7 @@ const getProductByPriceRangeOfPartCategory = asyncHandler(async(req, res) => {
         .json(new ApiResponse(200, products, "Products data fetched successfully"));
 })
 
-const addReviewInProduct = asyncHandler(async(req, res) => {
-    let {productId, rating, review} = req.body;
 
-    if(!productId || !rating || !review || !isValidObjectId(productId)) {
-        throw new ApiError(400, "ProductId, UserId, rating and review each are required and each should be valid");
-    }
-
-    let user = req.user;
-    console.log(user);
-    if(!user) {
-        throw new ApiError(400, "No user found");
-    }
-
-    rating = Number(rating);
-    if(typeof rating !== 'number') {
-        throw new ApiError(400, "Rating should be a number");
-    }
-
-    let product = await Product.findById({_id: productId});
-    if(!product) {
-        return res
-        .json(new ApiResponse(404, "No product found"))
-    }
-    
-    product.ratingsReviews.push({
-        review,
-        user: user._id,
-        rating,
-        createdAt: Date.now()
-    });
-    
-    await product.save();
-
-    return res
-        .json(new ApiResponse(200, "Review added to the product"));
-})
 
 const getReviewsOfProduct = asyncHandler(async(req, res) => {
     const{productId} = req.params;
@@ -574,9 +544,11 @@ const getReviewsOfProduct = asyncHandler(async(req, res) => {
         .json(new ApiResponse(200, "Product not found"));
     }
 
+    const filteredReviews = product.ratingsReviews.filter(review => review.user !== null);
+
     return res
     .status(200)
-    .json(new ApiResponse(200, {"ratingsReviews": product.ratingsReviews}, "Product reviews fetched successfully"))
+    .json(new ApiResponse(200, {"ratingsReviews": filteredReviews}, "Product reviews fetched successfully"))
 })
 
 const mostPopularProducts = asyncHandler(async(req, res) => {
@@ -641,4 +613,4 @@ const bestSeller = asyncHandler(async(req, res) => {
 
 
 
-export {getAllProducts, getProductByCategory, addProduct, deleteProduct, updateProduct, getProductById, getProductByPriceRangeOfPartCategory, addReviewInProduct, getReviewsOfProduct, mostPopularProducts,newItems, bestSeller}
+export {getAllProducts, getProductByCategory, addProduct, deleteProduct, updateProduct, getProductById, getProductByPriceRangeOfPartCategory, getReviewsOfProduct, mostPopularProducts,newItems, bestSeller}
