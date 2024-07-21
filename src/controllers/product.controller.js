@@ -64,6 +64,46 @@ const getAllProducts = asyncHandler(async(req, res) => {
     return res.json(new ApiResponse(200, products, "Products data found succesfully"))
 })
 
+const searchProduct = asyncHandler(async (req, res) => {
+    const { search } = req.params;
+  
+    let queryObject = {};
+  
+    if (search) {
+      queryObject.name = { $regex: search, $options: 'i' };
+    }
+  
+    // Apply pagination parameters
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+  
+    try {
+      // Use await to resolve the query and apply pagination
+      let data = await Product.find(queryObject).skip(skip).limit(limit);
+      console.log(data);
+  
+      if (!data || data.length === 0) {
+        // Handle case where no products match the query
+        return res.status(404).json({
+          status: 'error',
+          message: 'No products found matching the search criteria.',
+        });
+      }
+  
+      return res.status(200).json(
+       new ApiResponse(200, data, "Products fetched")
+      );
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      return res.status(500).json({
+        status: 'error',
+        message: 'Internal server error',
+      });
+    }
+  });
+  
+
 const getProductByCategory = asyncHandler(async (req, res) => {
     const { categoryId } = req.params;
     let { page = 1, limit = 10, query, sortType = "dsc" } = req.query;
@@ -613,4 +653,4 @@ const bestSeller = asyncHandler(async(req, res) => {
 
 
 
-export {getAllProducts, getProductByCategory, addProduct, deleteProduct, updateProduct, getProductById, getProductByPriceRangeOfPartCategory, getReviewsOfProduct, mostPopularProducts,newItems, bestSeller}
+export {getAllProducts, searchProduct, getProductByCategory, addProduct, deleteProduct, updateProduct, getProductById, getProductByPriceRangeOfPartCategory, getReviewsOfProduct, mostPopularProducts,newItems, bestSeller}
