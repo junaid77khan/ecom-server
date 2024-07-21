@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getAllProducts, getProductByCategory, addProduct, deleteProduct, updateProduct, getProductById, getProductByPriceRangeOfPartCategory, addReviewInProduct, getReviewsOfProduct, mostPopularProducts, newItems, bestSeller} from "../controllers/product.controller.js";
+import { getAllProducts, getProductByCategory, addProduct, deleteProduct, updateProduct, getProductById, getProductByPriceRangeOfPartCategory, getReviewsOfProduct, mostPopularProducts, newItems, bestSeller} from "../controllers/product.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middlware.js";
 
@@ -54,11 +54,6 @@ router.route("/update-product/:productId").post(
 router.route("/product-by-Id/:productId").get(getProductById);
 
 router.route("/product-in-range-category").post(getProductByPriceRangeOfPartCategory);
-
-router.route("/add-review").post(
-    verifyJWT,
-    addReviewInProduct
-);
 
 router.route("/get-reviews/:productId").get(
     getReviewsOfProduct
