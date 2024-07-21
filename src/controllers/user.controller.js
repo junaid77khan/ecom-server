@@ -10,6 +10,11 @@ import { usernameValidation } from "../schemas/signupSchema.js";
 import { verifySchema } from "../schemas/verifySchema.js";
 import { generateAccessAndRefreshTken } from "../utils/authUtils.js";
 import { sendVerificationEmail } from "../helpers/sendVerificationEmail.js";
+import NodeCache from 'node-cache';
+import request from 'request';
+import { promisify } from 'util';
+import requestPromise from 'request-promise-native';
+const myCache = new NodeCache();
 
 const UsernameSchema = z.object({
     username: usernameValidation,
@@ -177,6 +182,112 @@ const sendVerificationCode = asyncHandler(async(req, res) => {
     .status(200)
     .json(new ApiResponse(200, "Verification code sent successfully"));
 })
+
+function storeStringWithExpiration(key, value, expirationSeconds) {
+    const expirationTime = expirationSeconds * 1000;
+    myCache.set(key, value, expirationTime);
+  
+    setTimeout(() => {
+      myCache.del(key);
+      console.log(`Key '${key}' expired and was removed from the cache.`);
+    }, expirationTime);
+  }
+
+  function getStringFromCache(key) {
+    console.log(myCache.get(key));
+    return myCache.get(key);
+  }
+
+const getAuthToken = async () => {
+    const key = "authToken"
+    const expirationSeconds = 7 * 24 * 60 * 60
+    let authToken = `${process.env.SMSTOKEN}`;
+    if (authToken === undefined || authToken === null) {
+      const options = {
+        method: 'GET',
+        uri: `${process.env.APIBASEURL}/auth/v1/authentication/token?country=IN&customerId=${process.env.CUSTOMERID}&key=${process.env.BASE_64_PWD}&scope=NEW`,
+        headers: {
+          accept: '*/*'
+        }
+      };
+  
+      try {
+        const response = await requestPromise(options);
+        const token = JSON.parse(response)["token"];
+        storeStringWithExpiration(key, token, expirationSeconds);
+        authToken = token;
+        console.log(myCache.get(key));
+      } catch (error) {
+        throw new Error("Error", error);
+      }
+  
+      return authToken;
+    } else {
+      console.log(authToken);
+      return authToken;
+    }
+  };
+
+const sendVerificationCodeThroughSMS = asyncHandler(async(req, res) => {
+    const {phoneNumber} = req.body;
+    const authToken = await getAuthToken();
+
+    const options = {
+        method: 'POST',
+        url: `${process.env.APIBASEURL}/verification/v2/verification/send?countryCode=91&customerId=${process.env.CUSTOMERID}&flowType=SMS&mobileNumber=${phoneNumber}`,
+        headers: {
+          'authToken': authToken
+        }
+      };
+    
+      console.log(options);
+    
+      request(options, (error, response, body) => {
+        if (error) {
+          res.status(404).send({ "message": "Unable to send Otp" });
+          throw new Error(error);
+        }
+    
+        console.log(response.body);
+        try {
+          const parsedBody = JSON.parse(body);
+          res.status(200).send({ "data": parsedBody["data"] });
+        } catch (parseError) {
+          res.status(500).send({ "message": "Failed to parse response body" });
+          console.error('Failed to parse response body:', parseError);
+          console.error('Response body:', body);
+        }
+      });
+})
+
+const verifySMSOtp = async (req, res) => {
+    const verificationId = req.body["verificationId"];
+    const phoneNumber = req.body["phoneNumber"];
+    const otp = req.body["otp"];
+    const authToken = await getAuthToken();
+    const options = {
+      method: 'GET',
+      url: `${process.env.APIBASEURL}/verification/v2/verification/validateOtp?countryCode=91&mobileNumber=${phoneNumber}&verificationId=${verificationId}&customerId=${process.env.CUSTOMERID}&code=${otp}`,
+      headers: {
+        'authToken': authToken
+      }
+    };
+    console.log(options);
+    request(options, async (error, response, body) => {
+      if (error) {
+        res.status(404).send({ "message": "Otp verification failed" });
+        throw new Error(error);
+      }
+      try {
+        const parsedBody = JSON.parse(body);
+        res.status(200).send({ "data": parsedBody["data"] });
+      } catch (parseError) {
+        res.status(500).send({ "message": "Failed to parse response body" });
+        console.error('Failed to parse response body:', parseError);
+        console.error('Response body:', body);
+      }
+    });
+  };
 
 const verifyCode = asyncHandler(async(req, res) => {
         let { code, username } = req.body;
@@ -452,4 +563,4 @@ const isUserLoggedIn = asyncHandler( async(req, res) => {
     .json(new ApiResponse(200, {"isAuthenticated": isAuthenticated, "isAdmin": isAdmin}, "Data fetched successfully"));
 } )  
 
-export {signup, sendVerificationCode, verifyCode, signin, refreshAccessToken, logout, isUserLoggedIn};
+export {signup, sendVerificationCode, verifyCode, sendVerificationCodeThroughSMS, verifySMSOtp, signin, refreshAccessToken, logout, isUserLoggedIn};

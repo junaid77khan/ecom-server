@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { signup, sendVerificationCode, verifyCode, signin, refreshAccessToken, logout, isUserLoggedIn } from "../controllers/user.controller.js";
+import { signup, sendVerificationCode, verifyCode, signin, refreshAccessToken, logout, isUserLoggedIn, sendVerificationCodeThroughSMS, verifySMSOtp } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middlware.js";
 
@@ -7,6 +7,14 @@ const router = Router()
 
 router.route("/signup").post(
     signup
+)
+
+router.route('/send-sms-otp').post(
+    sendVerificationCodeThroughSMS
+)
+
+router.route("/verify-sms-otp").post(
+    verifySMSOtp
 )
 
 router.route("/resend-code").post(
