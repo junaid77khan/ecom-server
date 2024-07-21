@@ -1,11 +1,13 @@
 import { Router } from "express";
-import { getAllProducts, getProductByCategory, addProduct, deleteProduct, updateProduct, getProductById, getProductByPriceRangeOfPartCategory, getReviewsOfProduct, mostPopularProducts, newItems, bestSeller} from "../controllers/product.controller.js";
+import { getAllProducts, getProductByCategory, addProduct, deleteProduct, updateProduct, getProductById, getProductByPriceRangeOfPartCategory, getReviewsOfProduct, mostPopularProducts, newItems, bestSeller, searchProduct} from "../controllers/product.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middlware.js";
 
 const router = Router()
 
 router.route("/all-products").get(getAllProducts);
+
+router.route("/search-product/:search").get(searchProduct);
 
 router.route("/product-by-category/:categoryId").get(getProductByCategory);
 
