@@ -189,7 +189,7 @@ function storeStringWithExpiration(key, value, expirationSeconds) {
   
     setTimeout(() => {
       myCache.del(key);
-      console.log(`Key '${key}' expired and was removed from the cache.`);
+    //   console.log(`Key '${key}' expired and was removed from the cache.`);
     }, expirationTime);
   }
 
@@ -216,14 +216,14 @@ const getAuthToken = async () => {
         const token = JSON.parse(response)["token"];
         storeStringWithExpiration(key, token, expirationSeconds);
         authToken = token;
-        console.log(myCache.get(key));
+        // console.log(myCache.get(key));
       } catch (error) {
         throw new Error("Error", error);
       }
   
       return authToken;
     } else {
-      console.log(authToken);
+    //   console.log(authToken);
       return authToken;
     }
   };
@@ -240,7 +240,7 @@ const sendVerificationCodeThroughSMS = asyncHandler(async(req, res) => {
         }
       };
     
-      console.log(options);
+    //   console.log(options);
     
       request(options, (error, response, body) => {
         if (error) {
@@ -248,7 +248,7 @@ const sendVerificationCodeThroughSMS = asyncHandler(async(req, res) => {
           throw new Error(error);
         }
     
-        console.log(response.body);
+        // console.log(response.body);
         try {
           const parsedBody = JSON.parse(body);
           res.status(200).send({ "data": parsedBody["data"] });
@@ -272,7 +272,7 @@ const verifySMSOtp = async (req, res) => {
         'authToken': authToken
       }
     };
-    console.log(options);
+    // console.log(options);
     request(options, async (error, response, body) => {
       if (error) {
         res.status(404).send({ "message": "Otp verification failed" });
@@ -301,7 +301,7 @@ const verifyCode = asyncHandler(async(req, res) => {
         }
 
         if (!codeValidationResult.success) {
-            console.log(codeValidationResult.error.format().code);
+            // console.log(codeValidationResult.error.format().code);
             const codeErrors = codeValidationResult.error.format().code?._errors || [];
             throw new ApiError(400, {message: codeErrors?.length > 0 ? codeErrors.join(', ') : "Invalid code"})
         }

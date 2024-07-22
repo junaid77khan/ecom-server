@@ -98,9 +98,7 @@ import connectDB from "./src/db/index.js";
 import app from "./src/app.js";
 import Razorpay from "razorpay";
 import express from "express";
-import fast2sms from "fast-two-sms";
 import cors from "cors";
-import { v4 as uuidv4 } from "uuid";
 
 dotenv.config();
 
@@ -116,63 +114,8 @@ process.on("unhandledRejection", (reason, promise) => {
 app.use(express.json());
 app.use(cors());
 
-const otps = {}; // In-memory storage for OTPs
-
-app.post("/send-otp", async (req, res) => {
-  const { phone } = req.body;
-  // const otp = Math.floor(100000 + Math.random() * 900000); // Generate 6-digit OTP
-  const otp = String(Math.floor(100000 + Math.random() * 900000));
-console.log(otp);
-  const otpId = uuidv4();
-  otps[otpId] = { phone, otp, createdAt: Date.now() };
-
-  console.log(typeof phone);
-  typeof phone;
-  const options = {
-    authorization:
-      "PjzLOAVD3fElsJ1TevUuq5moR6dKC9YSNWpGcX8B0rkwiyaH4Qk0PmBjbcYpnhoAvGQN7eK8UXVfWIl9",
-    message: `Your OTP is ${otp}`,
-    numbers: [phone],
-  };
-  console.log(typeof otp);
-  try {
-    console.log(otp);
-    console.log(options);
 
 
-    const response = await fast2sms.sendMessage(options);
-    console.log("Fast2SMS response:", response); // Log the API response
-    res.status(200).json({ otpId, response });
-  } catch (error) {
-    console.error("Error sending OTP:", error.message); // Log the error
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.post("/verify-otp", (req, res) => {
-  const { otpId, otp } = req.body;
-  const storedOtp = otps[otpId];
-
-  if (!storedOtp) {
-    return res.status(400).json({ error: "Invalid OTP ID" });
-  }
-
-  const currentTime = Date.now();
-  const otpAge = currentTime - storedOtp.createdAt;
-
-  if (otpAge > 5 * 60 * 1000) {
-    // OTP is valid for 5 minutes
-    delete otps[otpId];
-    return res.status(400).json({ error: "OTP has expired" });
-  }
-
-  if (storedOtp.otp === parseInt(otp, 10)) {
-    delete otps[otpId];
-    res.status(200).json({ message: "OTP verified successfully" });
-  } else {
-    res.status(400).json({ error: "Invalid OTP" });
-  }
-});
 
 const PORT = process.env.PORT || 8000;
 
