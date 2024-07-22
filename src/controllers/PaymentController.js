@@ -52,7 +52,7 @@ export const paymentVerification = async (req, res) => {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
       req.body;
 
-    const redirectUrl = `http://localhost:7000/paymentsuccess?reference=${razorpay_payment_id}&order_id=${razorpay_order_id}&signature=${razorpay_signature}`;
+    const redirectUrl = `http://localhost:7000/checkout?reference=${razorpay_payment_id}&order_id=${razorpay_order_id}&signature=${razorpay_signature}`;
 
     res.redirect(redirectUrl);
     console.log(req.body);
