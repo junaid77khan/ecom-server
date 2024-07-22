@@ -1,6 +1,10 @@
 import { instance } from "../../index.js";
 import crypto from "crypto";
 import { Payment } from "../models/PaymentModel.js";
+import { asyncHandler } from "../utils/AsyncHandler.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
+import { ApiError } from "../utils/ApiError.js";
+import mongoose from "mongoose";
 
 export const checkout = async (req, res) => {
   const options = {
@@ -36,6 +40,9 @@ export const paymentVerification = async (req, res) => {
     // Database comes here
     console.log(req.body);
 
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
+      req.body;
+
     await Payment.create({
       razorpay_order_id,
       razorpay_payment_id,
@@ -49,8 +56,6 @@ export const paymentVerification = async (req, res) => {
     // );
     // console.log(req.body)
 
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
-      req.body;
 
     const redirectUrl = `http://localhost:7000/checkout?reference=${razorpay_payment_id}&order_id=${razorpay_order_id}&signature=${razorpay_signature}`;
 
@@ -62,3 +67,46 @@ export const paymentVerification = async (req, res) => {
     });
   }
 };
+
+
+const addRazorPayPaymentSuccess = asyncHandler(async (req, res) => {
+  let {razorpay_order_id, razorpay_payment_id, order_Id} = req.body;
+  console.log(req.body);
+
+  const response = await Payment.create({
+    razorpay_order_id,
+    razorpay_payment_id,
+    order_Id
+  })
+
+  return res
+  .status(200)
+  .json(new ApiResponse(200, response, "Payment details added"))
+})
+
+const getAllRazorPayOrdersBYId = asyncHandler(async(req, res) => {
+  const orders = await Payment.aggregate([
+    {
+        $lookup: {
+            from: 'orders', 
+            localField: 'order_Id',
+            foreignField: '_id',
+            as: 'orderDetails'  
+        }
+    }
+]);
+  const user = req.user;
+  if(!user || !user.isAdmin) {
+    throw new ApiError(500, "Unauthorized access");
+  }
+
+  if(!orders) {
+    throw new ApiError(500, "Failed to fetch RazorPay orders");
+  }
+
+  return res
+  .status(200)
+  .json(new ApiResponse(200, orders, "fetched successfully"));
+})
+
+export {addRazorPayPaymentSuccess, getAllRazorPayOrdersBYId};

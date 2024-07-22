@@ -10,7 +10,6 @@ router.route("/add-coupon/:couponId/:discountValue").get(
 );
 
 router.route("/get-coupons").get(
-    // verifyJWT,
     getCoupons
 );
 
