@@ -248,10 +248,9 @@ const sendVerificationCodeThroughSMS = asyncHandler(async(req, res) => {
           throw new Error(error);
         }
     
-        // console.log(response.body);
         try {
           const parsedBody = JSON.parse(body);
-          res.status(200).send({ "data": parsedBody["data"] });
+          res.status(200).send({ "data": parsedBody });
         } catch (parseError) {
           res.status(500).send({ "message": "Failed to parse response body" });
           console.error('Failed to parse response body:', parseError);
@@ -280,7 +279,8 @@ const verifySMSOtp = async (req, res) => {
       }
       try {
         const parsedBody = JSON.parse(body);
-        res.status(200).send({ "data": parsedBody["data"] });
+        console.log(parsedBody);
+        res.status(200).send({ "data": parsedBody });
       } catch (parseError) {
         res.status(500).send({ "message": "Failed to parse response body" });
         console.error('Failed to parse response body:', parseError);

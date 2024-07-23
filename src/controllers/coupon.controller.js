@@ -59,14 +59,14 @@ const addCoupon = asyncHandler(async(req, res) => {
 
 const getCoupons = asyncHandler(async(req, res) => {
 
-    const products = await Coupon.find({})
+    const coupons = await Coupon.find({})
 
-    if(!products) {
+    if(!coupons) {
         throw new ApiError(400, "Something went wrong while fetching coupons")
     }
 
     return res
-        .json(new ApiResponse(200, products, "Coupon Fetched!!"));
+        .json(new ApiResponse(200, coupons, "Coupon Fetched!!"));
 })
 
 const deleteCoupons = asyncHandler(async(req, res) => {
