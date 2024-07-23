@@ -12,7 +12,7 @@ router.route("/search-product/:search").get(searchProduct);
 router.route("/product-by-category/:categoryId").get(getProductByCategory);
 
 router.route("/add-product").post(
-    // verifyJWT,
+    verifyJWT,
     upload.fields([
         {
             name: "image1",
@@ -31,12 +31,12 @@ router.route("/add-product").post(
 )
 
 router.route("/delete-product/:productId").get(
-    // verifyJWT,
+    verifyJWT,
     deleteProduct
 );
 
 router.route("/update-product/:productId").post(
-    // verifyJWT,
+    verifyJWT,
     upload.fields([
         {
             name: "image1",

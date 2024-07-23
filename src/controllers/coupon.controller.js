@@ -8,6 +8,14 @@ import { discountValueSchema } from "../schemas/productSchema.js";
 import { isValidObjectId } from "mongoose";
 
 const addCoupon = asyncHandler(async(req, res) => {
+    const user = req?.user;
+
+    if(!user || !user?.isAdmin) {
+        return res.status(403).json({
+            error: "Unauthorized access",
+            message: "Access to this resource is restricted to administrators only"
+        });
+    }
     let {couponId, discountValue} = req.params;
 
     if(!couponId || !discountValue) {
@@ -70,10 +78,16 @@ const getCoupons = asyncHandler(async(req, res) => {
 })
 
 const deleteCoupons = asyncHandler(async(req, res) => {
+    const user = req?.user;
+
+    if(!user || !user?.isAdmin) {
+        return res.status(403).json({
+            error: "Unauthorized access",
+            message: "Access to this resource is restricted to administrators only"
+        });
+    }
 
     const {couponId} = req.params;
-
-    console.log(couponId);
 
     if(!couponId || !isValidObjectId(couponId)) {
         throw new ApiError(400, "Invalid coupon Id");

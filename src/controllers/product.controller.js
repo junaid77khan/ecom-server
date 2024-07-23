@@ -148,19 +148,19 @@ const getProductByCategory = asyncHandler(async (req, res) => {
 const addProduct = asyncHandler(async(req, res) => {
     const user = req?.user;
 
-    // if(!user || !user?.isAdmin) {
-    //     return res.status(403).json({
-    //         error: "Unauthorized access",
-    //         message: "Access to this resource is restricted to administrators only"
-    //     });
-    // }
+    if(!user || !user?.isAdmin) {
+        return res.status(403).json({
+            error: "Unauthorized access",
+            message: "Access to this resource is restricted to administrators only"
+        });
+    }
 
     let {name, description, features, specifications, actualPrice, salePrice, stock, categoryId, offer} = req.body;
     const {files} = req;
 
     if(!name || !description || !features || !specifications || !actualPrice || !salePrice || !stock || !categoryId) {
         if(files.length > 0) deleteImages(files)
-        throw new ApiError(404, "Please provide data of required fields");
+            return res.status(400).json(new ApiResponse(400, {"error": "Please provide all fields"}));
     }
 
     if(!isValidObjectId(categoryId)) {
@@ -174,13 +174,12 @@ const addProduct = asyncHandler(async(req, res) => {
 
     if(!category) {
         if(files.length > 0) deleteImages(files)
-        return res
-        .json(new ApiResponse(200, "Category not fount"))
+            return res.status(400).json(new ApiResponse(400, {"error": "Category not found"}));
     }
 
     if(!files['image1'] || !files['image2'] || !files['image3']) {
         if(files.length > 0) deleteImages(files)
-        throw new ApiError(404, "Please provide exact 3 images of product");
+        return res.status(400).json(new ApiResponse(400, {"error": "Please provide exact 3 images"}));
     }
 
     // features = JSON.parse(features)
@@ -220,25 +219,50 @@ const addProduct = asyncHandler(async(req, res) => {
           ratingsReviews,
           availability,
         } = validation.error.format();
-      
-        return res.status(400).json({
-          error: "Validation error",
-          details: {
-            name: name?._errors[0] || "",
-            description: description?._errors[0] || "",
-            features: features || "",
-            specifications: specifications || "",
-            actualPrice: actualPrice?._errors[0] || "",
-            salePrice: salePrice?._errors[0] || "",
-            unitsSold: unitsSold?._errors[0] || "",
-            stock: stock?._errors[0] || "",
-            category: category?._errors[0] || "",
-            images: images?._errors[0] || "",
-            offer: offer?._errors[0] || "",
-            ratingsReviews: ratingsReviews?._errors[0] || "",
-            availability: availability?._errors[0] || "",
-          },
-        });
+
+        if(name?._errors[0] && name?._errors[0] !== '') {
+            return res.status(400).json(new ApiResponse(400, {"error": name?._errors[0]}));
+        }
+        if(description?._errors[0] && description?._errors[0] !== '') {
+            return res.status(400).json(new ApiResponse(400, {"error": description?._errors[0]}));
+        }
+        if(features?._errors[0] && features?._errors[0] !== '') {
+            return res.status(400).json(new ApiResponse(400, {"error": features?._errors[0]}));
+        }
+        if(specifications?._errors[0] && specifications?._errors[0] !== '') {
+            return res.status(400).json(new ApiResponse(400, {"error": specifications?._errors[0]}));
+        }
+        if(stock?._errors[0] && stock?._errors[0] !== '') {
+            return res.status(400).json(new ApiResponse(400, {"error": stock?._errors[0]}));
+        }
+        if(actualPrice?._errors[0] && actualPrice?._errors[0] !== '') {
+            return res.status(400).json(new ApiResponse(400, {"error": actualPrice?._errors[0]}));
+        }
+        if(salePrice?._errors[0] && salePrice?._errors[0] !== '') {
+            return res.status(400).json(new ApiResponse(400, {"error": salePrice?._errors[0]}));
+        }
+        if(unitsSold?._errors[0] && unitsSold?._errors[0] !== '') {
+            return res.status(400).json(new ApiResponse(400, {"error": unitsSold?._errors[0]}));
+        }
+        if(category?._errors[0] && category?._errors[0] !== '') {
+            return res.status(400).json(new ApiResponse(400, {"error": category?._errors[0]}));
+        }
+        if(images?._errors[0] && images?._errors[0] !== '') {
+            return res.status(400).json(new ApiResponse(400, {"error": images?._errors[0]}));
+        }
+        if(offer?._errors[0] && offer?._errors[0] !== '') {
+            return res.status(400).json(new ApiResponse(400, {"error": offer?._errors[0]}));
+        }
+        if(ratingsReviews?._errors[0] && ratingsReviews?._errors[0] !== '') {
+            return res.status(400).json(new ApiResponse(400, {"error": ratingsReviews?._errors[0]}));
+        }
+        if(availability?._errors[0] && availability?._errors[0] !== '') {
+            return res.status(400).json(new ApiResponse(400, {"error": availability?._errors[0]}));
+        }
+
+        return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "Something went wrong"));
     }
 
     const cloudinaryResponse1 = await uploadOnCloudinary(files.image1[0].path);
@@ -248,7 +272,7 @@ const addProduct = asyncHandler(async(req, res) => {
     console.log("Cloudinary response", cloudinaryResponse1, " ", cloudinaryResponse2, " ", cloudinaryResponse3);
       
     if(!cloudinaryResponse1 || !cloudinaryResponse2 || !cloudinaryResponse3) {
-        throw new ApiError("Something went wrong while uploading images on cloudinary")
+        return res.status(500).json(new ApiResponse(500, {"error": "Cloudinary Error"}));
     }
 
     const cloudinaryImagesURL = [cloudinaryResponse1.url, cloudinaryResponse2.url, cloudinaryResponse3.url];
@@ -271,7 +295,7 @@ const addProduct = asyncHandler(async(req, res) => {
     await category.save();
 
     if(!product) {
-        throw new ApiError(500, "Something went wrong while adding product");
+        return res.status(500).json(new ApiResponse(500, {"error": "Something went wrong while adding product"}));
     }
 
     return res
@@ -281,12 +305,12 @@ const addProduct = asyncHandler(async(req, res) => {
 const deleteProduct = asyncHandler(async(req, res) => {
     const user = req?.user;
 
-    // if(!user || !user?.isAdmin) {
-    //     return res.status(403).json({
-    //         error: "Unauthorized access",
-    //         message: "Access to this resource is restricted to administrators only"
-    //     });
-    // }
+    if(!user || !user?.isAdmin) {
+        return res.status(403).json({
+            error: "Unauthorized access",
+            message: "Access to this resource is restricted to administrators only"
+        });
+    }
 
     const {productId} = req.params;
 
@@ -301,6 +325,12 @@ const deleteProduct = asyncHandler(async(req, res) => {
             .status(200)
             .json(new ApiResponse(200, {}, "Product not found"))
     }
+
+    const ratingsReviews = product?.ratingsReviews;
+
+    ratingsReviews.map(async(reviewId) => {
+        await Review.findByIdAndDelete(reviewId);
+    })
 
     const category = product?.categoryId;
 
@@ -333,12 +363,12 @@ const deleteProduct = asyncHandler(async(req, res) => {
 const updateProduct = asyncHandler(async(req, res) => {
     const user = req?.user;
 
-    // if(!user || !user?.isAdmin) {
-    //     return res.status(403).json({
-    //         error: "Unauthorized access",
-    //         message: "Access to this resource is restricted to administrators only"
-    //     });
-    // }
+    if(!user || !user?.isAdmin) {
+        return res.status(403).json({
+            error: "Unauthorized access",
+            message: "Access to this resource is restricted to administrators only"
+        });
+    }
 
     let { productId } = req.params
     let { name, description, features, specifications, actualPrice, salePrice, unitsSold, stock, categoryId, offer} = req.body
@@ -383,40 +413,65 @@ const updateProduct = asyncHandler(async(req, res) => {
 
         if (!validation.success) {
             if(files.length > 0) deleteImages(files)
-                const {
-                  name,
-                  description,
-                  features,
-                  specifications,
-                  actualPrice,
-                  salePrice,
-                  unitsSold,
-                  stock,
-                  category,
-                  images,
-                  offer,
-                  ratingsReviews,
-                  availability,
-                } = validation.error.format();
-              
-                return res.status(400).json({
-                  error: "Validation error",
-                  details: {
-                    name: name?._errors[0] || "",
-                    description: description?._errors[0] || "",
-                    features: features || "",
-                    specifications: specifications || "",
-                    actualPrice: actualPrice?._errors[0] || "",
-                    salePrice: salePrice?._errors[0] || "",
-                    unitsSold: unitsSold?._errors[0] || "",
-                    stock: stock?._errors[0] || "",
-                    category: category?._errors[0] || "",
-                    images: images?._errors[0] || "",
-                    offer: offer?._errors[0] || "",
-                    ratingsReviews: ratingsReviews?._errors[0] || "",
-                    availability: availability?._errors[0] || "",
-                  },
-                });
+            const {
+              name,
+              description,
+              features,
+              specifications,
+              actualPrice,
+              salePrice,
+              unitsSold,
+              stock,
+              category,
+              images,
+              offer,
+              ratingsReviews,
+              availability,
+            } = validation.error.format();
+    
+            if(name?._errors[0] && name?._errors[0] !== '') {
+                return res.status(400).json(new ApiResponse(400, {"error": name?._errors[0]}));
+            }
+            if(description?._errors[0] && description?._errors[0] !== '') {
+                return res.status(400).json(new ApiResponse(400, {"error": description?._errors[0]}));
+            }
+            if(features?._errors[0] && features?._errors[0] !== '') {
+                return res.status(400).json(new ApiResponse(400, {"error": features?._errors[0]}));
+            }
+            if(specifications?._errors[0] && specifications?._errors[0] !== '') {
+                return res.status(400).json(new ApiResponse(400, {"error": specifications?._errors[0]}));
+            }
+            if(stock?._errors[0] && stock?._errors[0] !== '') {
+                return res.status(400).json(new ApiResponse(400, {"error": stock?._errors[0]}));
+            }
+            if(actualPrice?._errors[0] && actualPrice?._errors[0] !== '') {
+                return res.status(400).json(new ApiResponse(400, {"error": actualPrice?._errors[0]}));
+            }
+            if(salePrice?._errors[0] && salePrice?._errors[0] !== '') {
+                return res.status(400).json(new ApiResponse(400, {"error": salePrice?._errors[0]}));
+            }
+            if(unitsSold?._errors[0] && unitsSold?._errors[0] !== '') {
+                return res.status(400).json(new ApiResponse(400, {"error": unitsSold?._errors[0]}));
+            }
+            if(category?._errors[0] && category?._errors[0] !== '') {
+                return res.status(400).json(new ApiResponse(400, {"error": category?._errors[0]}));
+            }
+            if(images?._errors[0] && images?._errors[0] !== '') {
+                return res.status(400).json(new ApiResponse(400, {"error": images?._errors[0]}));
+            }
+            if(offer?._errors[0] && offer?._errors[0] !== '') {
+                return res.status(400).json(new ApiResponse(400, {"error": offer?._errors[0]}));
+            }
+            if(ratingsReviews?._errors[0] && ratingsReviews?._errors[0] !== '') {
+                return res.status(400).json(new ApiResponse(400, {"error": ratingsReviews?._errors[0]}));
+            }
+            if(availability?._errors[0] && availability?._errors[0] !== '') {
+                return res.status(400).json(new ApiResponse(400, {"error": availability?._errors[0]}));
+            }
+    
+            return res
+            .status(400)
+            .json(new ApiResponse(400, {}, "Something went wrong"));
         }
 
         let product = await Product.findById({_id: productId});
@@ -484,12 +539,12 @@ const updateProduct = asyncHandler(async(req, res) => {
             offer: offer ? offer:null,
         },{new: true});
     
-        if(!updateProduct) {
+        if(!updatedProduct) {
             throw new ApiError(500, "Something went wrong while adding product");
         }
     
         return res
-        .json(new ApiResponse(200, updateProduct, "Product updated succesfully"));
+        .json(new ApiResponse(200, updatedProduct, "Product updated succesfully"));
     }
 
     return res

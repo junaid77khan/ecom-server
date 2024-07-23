@@ -5,7 +5,6 @@ import { verifyJWT } from "../middlewares/auth.middlware.js";
 const router = Router()
 
 router.route("/add-review").post(
-    verifyJWT,
     addReview
 )
 router.route("/get-product-reviews").post(
