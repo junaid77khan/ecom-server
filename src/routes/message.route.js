@@ -13,7 +13,7 @@ router.route("/get-messages").get(
 );
 
 router.route("/delete-message/:messageId").get(
-    // verifyJWT,
+    verifyJWT,
     deleteMessages
 )
 

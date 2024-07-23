@@ -5,16 +5,17 @@ import { ACCEPTED_IMAGE_MIME_TYPES } from '../constants.js';
 export const specificationSchema = z.array(z.object({
   name: z.string().min(1, "Name is required").max(30, "Name must be 30 characters or less"),
   value: z.string().min(1, "Value is required").max(30, "Value must be 30 characters or less"),
-})).min(1, "Specification is required").max(10, "No more than 10 specification allowed");
+})).min(1, "Specification is required").max(10, "No more than 10 specification allowed").optional();
 
 export const nameSchema = z
   .string()
+  .min(10, "Product name must be 10 characters or more")
   .max(255, "Product name must be 255 characters or less")
   .regex(/^[a-zA-Z0-9\s\-_]+$/, "Product name must not contain special characters");
 
-export const descriptionSchema = z.string().max(3000, "Description must be 3000 characters or less")
+export const descriptionSchema = z.string().min(10, "Description must be 10 characters or more").max(3000, "Description must be 3000 characters or less")
 
-export const featuresSchema = z.array(z.string()).min(1, "Feature is required").max(10, "No more than 10 features allowed");
+export const featuresSchema = z.array(z.string()).min(1, "Feature is required").max(10, "No more than 10 features allowed").optional();
 
 export const priceSchema = z.number().positive("Price must be a positive number").min(0, "Price must be greater than zero");
 

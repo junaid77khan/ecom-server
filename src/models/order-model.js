@@ -47,6 +47,11 @@ const orderSchema = new Schema({
     enum: ['COD', 'RazorPay'],
     required: true
   },
+  status: {
+    type: String,
+    enum: ['pending', 'completed', 'cancelled'], 
+    default: 'pending' 
+  }
 }, { timestamps: true });
 
 export const Order = mongoose.model('Order', orderSchema);

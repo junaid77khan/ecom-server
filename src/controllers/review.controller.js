@@ -13,15 +13,10 @@ import { User } from "../models/user-model.js";
 import { Review } from "../models/review-model.js";
 
 const addReview = asyncHandler(async(req, res) => {
-    let {productId, rating, review} = req.body;
+    let {productId, rating, review, name} = req.body;
 
-    if(!productId || !rating || !review || !isValidObjectId(productId)) {
-        throw new ApiError(400, "ProductId, UserId, rating and review each are required and each should be valid");
-    }
-
-    let user = req.user;
-    if(!user) {
-        throw new ApiError(400, "No user found");
+    if(!productId || !rating || !review || !isValidObjectId(productId) || !name) {
+        throw new ApiError(400, "All fields are required and each should be valid");
     }
 
     rating = Number(rating);
@@ -37,7 +32,7 @@ const addReview = asyncHandler(async(req, res) => {
     }
 
     const createdReview = await Review.create({
-        userId: user._id,
+        name,
         productId: product._id,
         rating,
         review
@@ -53,7 +48,7 @@ const addReview = asyncHandler(async(req, res) => {
     
     await product.save();
 
-    const reviews = await Review.find({productId}).populate('userId');
+    const reviews = await Review.find({productId});
 
     return res
         .json(new ApiResponse(200, reviews, "Review added to the product"));
@@ -74,7 +69,7 @@ const getProductReviews = asyncHandler(async (req, res) => {
     }
 
     // Find reviews associated with the product ObjectId
-    const reviews = await Review.find({ productId: product._id }).populate('userId');
+    const reviews = await Review.find({ productId: product._id });
 
     if (!reviews) {
         throw new ApiError(500, "Something went wrong while fetching reviews");

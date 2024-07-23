@@ -29,6 +29,15 @@ const addMessage = asyncHandler(async(req, res) => {
 
 const getMessages  = asyncHandler(async(req, res) => {
 
+    const user = req?.user;
+
+    if(!user || !user?.isAdmin) {
+        return res.status(403).json({
+            error: "Unauthorized access",
+            message: "Access to this resource is restricted to administrators only"
+        });
+    }
+
     const messages = await Contact.find({})
 
     if(!messages) {
@@ -45,11 +54,11 @@ const deleteMessages = asyncHandler(async(req, res) => {
 
     const user = req.user;
     
-    // if(!user.isAdmin) {
-    //     return res
-    //     .status(403)
-    //     .json(new ApiResponse(403, {}, "Unauthorized access"));
-    // }
+    if(!user.isAdmin) {
+        return res
+        .status(403)
+        .json(new ApiResponse(403, {}, "Unauthorized access"));
+    }
 
     if(!messageId || !isValidObjectId(messageId)) {
         throw new ApiError(400, "Invalid message Id");

@@ -5,7 +5,7 @@ import { verifyJWT } from "../middlewares/auth.middlware.js";
 const router = Router()
 
 router.route("/add-coupon/:couponId/:discountValue").get(
-    // verifyJWT,
+    verifyJWT,
     addCoupon
 );
 
@@ -14,12 +14,12 @@ router.route("/get-coupons").get(
 );
 
 router.route("/delete-coupon/:couponId").get(
-    // verifyJWT,
+    verifyJWT,
     deleteCoupons
 );
 
 router.route("/coupon-by-id").post(
-    // verifyJWT,
+    verifyJWT,
     getCouponById
 );
 
