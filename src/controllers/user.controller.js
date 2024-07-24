@@ -101,6 +101,7 @@ const signup = asyncHandler( async(req, res) => {
         existingUserByEmail.password = password;
         existingUserByEmail.verifyCode = verifyCode;
         existingUserByEmail.verifyCodeExpiry = expiryDate;
+        existingUserByEmail.isVerified = true;
    
         await existingUserByEmail.save();
     } else {
@@ -117,6 +118,7 @@ const signup = asyncHandler( async(req, res) => {
             existingNotVerifiedUserByUsername.password = password;
             existingNotVerifiedUserByUsername.verifyCode = verifyCode;
             existingNotVerifiedUserByUsername.verifyCodeExpiry = expiryDate;
+            existingNotVerifiedUserByUsername.isVerified = true;
 
             await existingNotVerifiedUserByUsername.save();
         } else {
@@ -126,26 +128,12 @@ const signup = asyncHandler( async(req, res) => {
                 password,
                 verifyCode,
                 verifyCodeExpiry: expiryDate,
-                isVerified: false,
+                isVerified: true,
             })
         }
     }
 
     const user = await User.find({email})
-    
-    const verificationEmailResponse = await sendVerificationEmail(
-        email,
-        username,
-        verifyCode
-    )
-
-    if(!verificationEmailResponse) {
-        return res
-        .status(500)
-        .json(
-            new ApiResponse(500, verificationEmailResponse.response)
-        )
-    }
 
     return res
     .status(200)
@@ -629,7 +617,7 @@ const updateUserDetails = asyncHandler( async(req, res) => {
                 new ApiResponse(
                     400,
                     {
-                        "keyError": `${password?.trim === "" ? "Key is not correct" : ""}`,
+                        "passwordError": "Credentials are wrong",
                     },
                 )
             )

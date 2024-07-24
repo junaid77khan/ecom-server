@@ -52,15 +52,7 @@ const addOrder = asyncHandler(async(req, res) => {
 })
 
 const deleteOrder = asyncHandler(async(req, res) => {
-    const user = req?.user;
-
-    if(!user || !user?.isAdmin) {
-        return res.status(403).json({
-            error: "Unauthorized access",
-            message: "Access to this resource is restricted to administrators only"
-        });
-    }
-    const{orderId} = req.params();
+    const{orderId} = req.params;
 
     if(!orderId || !isValidObjectId(orderId)) {
         throw new ApiError(400, "Invalid orderId");

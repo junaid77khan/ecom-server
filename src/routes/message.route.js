@@ -9,6 +9,7 @@ router.route("/add-message").post(
 );
 
 router.route("/get-messages").get(
+    verifyJWT,
     getMessages
 );
 

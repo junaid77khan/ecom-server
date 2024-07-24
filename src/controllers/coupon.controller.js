@@ -58,7 +58,7 @@ const addCoupon = asyncHandler(async(req, res) => {
     });
 
     if(!createdCoupon) {
-        throw new ApiError(500, "Something went wrong while adding coupon")
+        throw new ApiError(500, {}, "Something went wrong while adding coupon")
     }
 
     return res
@@ -96,7 +96,7 @@ const deleteCoupons = asyncHandler(async(req, res) => {
     const response = await Coupon.findByIdAndDelete(couponId)
 
     if(!response) {
-        throw new ApiError(400, "Something went wrong while deleting coupon")
+        throw new ApiError(400, {}, "Something went wrong while deleting coupon")
     }
 
     return res
