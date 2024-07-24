@@ -9,7 +9,6 @@ router.route("/add-order").post(
 );
 
 router.route("/delete-order/:orderId").get(
-    verifyJWT,
     deleteOrder
 );
 

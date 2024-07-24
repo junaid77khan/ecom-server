@@ -5,15 +5,13 @@ import cookieParser from "cookie-parser";
 import { config } from "dotenv";
 import paymentRoute from "./routes/PaymentRoute.js";
 const app = express();
-console.log("cors");
 
 const corsConfig = {
   origin: [
-    "https://669c19289b863d678e4adcac--earnest-gaufre-91598d.netlify.app",
+    "https://decor-candle.vercel.app",
+    "https://decor-candle-admin.vercel.app",
     "http://localhost:7000",
     "http://localhost:5173",
-    "https://ecom-candle-decor-admin.vercel.app",
-    "https://ecom-candle-decor.vercel.app",
   ],
   credentials: true,
   methods: ["GET", "POST", "DELETE", "PUT"],

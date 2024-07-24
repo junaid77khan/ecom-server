@@ -105,13 +105,6 @@ import nodemailer from "nodemailer";
 
 dotenv.config();
 
-app.use(
-  cors({
-    origin: "http://localhost:5173", // Your frontend's origin
-    credentials: true,
-  })
-);
-
 export const instance = new Razorpay({
   key_id: "rzp_test_BmxEZzZl9QMupi",
   key_secret: "ChsggKSAQkx7xs4hE0Fb37zh",
