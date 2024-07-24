@@ -5,7 +5,6 @@ import cookieParser from "cookie-parser";
 import { config } from "dotenv";
 import paymentRoute from "./routes/PaymentRoute.js";
 const app = express();
-console.log("cors");
 
 const corsConfig = {
   origin: [
