@@ -39,6 +39,7 @@ import cartRouter from "./routes/cart.route.js";
 import reviewRouter from "./routes/review.route.js";
 import couponRouter from "./routes/coupon.route.js";
 import messageRouter from "./routes/message.route.js";
+import orderRouter from "./routes/order.route.js"
 
 app.get("/api/getkey", (req, res) =>
   res.status(200).json({ key: "rzp_test_BmxEZzZl9QMupi" })
@@ -51,5 +52,6 @@ app.use("/api/v1/cart", cartRouter);
 app.use("/api/v1/review", reviewRouter);
 app.use("/api/v1/coupon", couponRouter);
 app.use("/api/v1/message", messageRouter);
+app.use("/api/v1/order", orderRouter);
 
 export default app;

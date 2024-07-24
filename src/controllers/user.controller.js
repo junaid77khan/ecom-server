@@ -15,6 +15,8 @@ import request from 'request';
 import { promisify } from 'util';
 import requestPromise from 'request-promise-native';
 const myCache = new NodeCache();
+import { updateSchema } from "../schemas/updateSchema.js";
+const securityKey='skp@decor'
 
 const UsernameSchema = z.object({
     username: usernameValidation,
@@ -248,10 +250,9 @@ const sendVerificationCodeThroughSMS = asyncHandler(async(req, res) => {
           throw new Error(error);
         }
     
-        // console.log(response.body);
         try {
           const parsedBody = JSON.parse(body);
-          res.status(200).send({ "data": parsedBody["data"] });
+          res.status(200).send({ "data": parsedBody });
         } catch (parseError) {
           res.status(500).send({ "message": "Failed to parse response body" });
           console.error('Failed to parse response body:', parseError);
@@ -280,7 +281,8 @@ const verifySMSOtp = async (req, res) => {
       }
       try {
         const parsedBody = JSON.parse(body);
-        res.status(200).send({ "data": parsedBody["data"] });
+        console.log(parsedBody);
+        res.status(200).send({ "data": parsedBody });
       } catch (parseError) {
         res.status(500).send({ "message": "Failed to parse response body" });
         console.error('Failed to parse response body:', parseError);
@@ -364,6 +366,13 @@ const verifyCode = asyncHandler(async(req, res) => {
                 new ApiResponse(400, {message: "Your verification code is expired. Please signup again to get a new code"})
             )
         }
+})
+
+const curUser = asyncHandler(async(req, res) => {
+    const user = req.user;
+    return res
+    .status(200)
+    .json(new ApiResponse(200, user, "User fetched"))
 })
 
 const signin = asyncHandler(async(req, res) => {
@@ -563,4 +572,78 @@ const isUserLoggedIn = asyncHandler( async(req, res) => {
     .json(new ApiResponse(200, {"isAuthenticated": isAuthenticated, "isAdmin": isAdmin}, "Data fetched successfully"));
 } )  
 
-export {signup, sendVerificationCode, verifyCode, sendVerificationCodeThroughSMS, verifySMSOtp, signin, refreshAccessToken, logout, isUserLoggedIn};
+const updateUserDetails = asyncHandler( async(req, res) => {
+    let {username, email, password, key} = req.body;
+
+    const validation = updateSchema.safeParse(req.body);
+
+    if(!validation.success) {
+        const usernameErrors = validation.error.format().username?._errors || [];
+        const emailErrors = validation.error.format().email?._errors || [];
+        const passwordErrors = validation.error.format().password?._errors || [];
+
+        return res
+        .status(400)
+        .json(
+            new ApiResponse(
+                400,
+                {
+                    "usernameError": `${usernameErrors?.length > 0 ? `${usernameErrors[0]}` : ""}`,
+                    "emailError": `${emailErrors?.length > 0 ? `${emailErrors[0]}` : ""}`,
+                    "passwordError": `${passwordErrors?.length > 0 ? `${passwordErrors[0]}` : ""}`,
+                },
+            )
+        )
+    }
+
+        
+        if(
+            [username, email, password].some( (field) => field?.trim === "" )
+        ) {
+    
+            return res
+            .status(400)
+            .json(
+                new ApiResponse(
+                    400,
+                    {
+                        "usernameError": `${username?.trim === "" ? "Username is required" : ""}`,
+                        "emailError": `${email?.trim === "" ? "Email is required" : ""}`,
+                        "passwordError": `${password?.trim === "" ? "Password is required" : ""}`,
+                    },
+                )
+            )
+        }
+    let user=req.user;
+
+    await User.findByIdAndUpdate(user._id, {
+        username,
+        email,
+    })
+
+    if(password.toString() !== 'DUMMYPASSWORD') {
+        if(securityKey.toString() !== key.toString()) {
+            return res
+            .status(400)
+            .json(
+                new ApiResponse(
+                    400,
+                    {
+                        "keyError": `${password?.trim === "" ? "Key is not correct" : ""}`,
+                    },
+                )
+            )
+        }
+        user = await User.findById(user._id)
+        user.password = password;
+        await user.save()
+    }
+
+    user = await User.find({email})
+
+    return res
+    .status(200)
+    .json(new ApiResponse(200, user, "User updated successfully"));
+} )
+
+export {signup, sendVerificationCode, updateUserDetails, verifyCode, curUser, sendVerificationCodeThroughSMS, verifySMSOtp, signin, refreshAccessToken, logout, isUserLoggedIn};

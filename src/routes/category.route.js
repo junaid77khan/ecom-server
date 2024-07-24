@@ -8,7 +8,7 @@ const router = Router()
 router.route("/all-categories").get(getAllCategories);
 
 router.route("/add-category").post(
-    // verifyJWT,
+    verifyJWT,
     upload.fields([
         {
             name: "image",
@@ -19,12 +19,12 @@ router.route("/add-category").post(
 )
 
 router.route("/delete-category/:categoryId").get(
-    // verifyJWT,
+    verifyJWT,
     deleteCategory
 )
 
 router.route("/update-category/:categoryId").post(
-    // verifyJWT,
+    verifyJWT,
     upload.fields([
         {
             name: "image",

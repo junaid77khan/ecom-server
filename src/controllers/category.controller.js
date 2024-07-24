@@ -78,50 +78,54 @@ const getAllCategories = asyncHandler(async(req, res) => {
 const addCategory = asyncHandler( async(req, res) => {
     const user = req?.user;
 
-    // if(!user || !user?.isAdmin) {
-    //     return res.status(403).json({
-    //         error: "Unauthorized access",
-    //         message: "Access to this resource is restricted to administrators only"
-    //     });
-    // }
-    console.log(req.files);
+    if(!user || !user?.isAdmin) {
+        return res.status(403).json({
+            error: "Unauthorized access",
+            message: "Access to this resource is restricted to administrators only"
+        });
+    }
     const{name, description} = req.body;
     const imageLocalPath = req.files?.image[0].path;
 
     const validation = categorySchema.safeParse({name, description, image: req.files});
 
     if (!validation.success) {
-        const nameError = validation.error.format().name?._errors?.[0] || "";
-        const descriptionError = validation.error.format().description?._errors?.[0] || "";
-        const imageError = validation.error.format().image?._errors?.[0] || "";
+        const {
+            name,
+            description,
+            image
+        } = validation.error.format();
+
+        if(name?._errors[0] && name?._errors[0] !== '') {
+            return res.status(400).json(new ApiResponse(400, {"error": name?._errors[0]}));
+        }
+        if(description?._errors[0] && description?._errors[0] !== '') {
+            return res.status(400).json(new ApiResponse(400, {"error": description?._errors[0]}));
+        }
+        if(image?._errors[0] && image?._errors[0] !== '') {
+            return res.status(400).json(new ApiResponse(400, {"error": image?._errors[0]}));
+        }
 
         return res.status(400).json({
             error: "Validation error",
-            details: {
-                nameError,
-                descriptionError,
-                imageError
-            }
+            success: false
         });
     }
 
     if ([name, imageLocalPath].some((field) => !field || field.trim() === "")) {
-        return res.status(400).json({
-            error: "Validation error",
-            details: {
-                nameError: name.trim() === "" ? "Name is required" : "",
-                imageError: imageLocalPath.trim() === "" ? "Image is required" : ""
-            }
-        });
+        if(name.trim() === "") {
+            return res.status(400).json(new ApiResponse(400, {"error": "Category name is required"}));
+        }
+        if(imageLocalPath.trim() === "") {
+            return res.status(400).json(new ApiResponse(400, {"error": "Image is required"}));
+        }
     }
 
     const existedCategoryName = await Category.findOne({name});
 
     if (existedCategoryName) {
-        return res.status(409).json({
-            error: "Conflict",
-            message: "Category name already exists"
-        });
+        
+        return res.status(400).json(new ApiResponse(400, {"error": "Category name already exists"}));
     }
 
     const cloudinaryResponse = await uploadOnCloudinary(imageLocalPath);
@@ -129,7 +133,7 @@ const addCategory = asyncHandler( async(req, res) => {
     console.log("Cloudinary path", cloudinaryResponse);
 
     if(!cloudinaryResponse) {
-        throw new ApiError("Something went wrong while uploading image on cloudinary")
+        return res.status(500).json(new ApiResponse(500, {"error": "Cloudinary error"}));
     }
 
     const category = await Category.create({
@@ -139,7 +143,7 @@ const addCategory = asyncHandler( async(req, res) => {
     });
 
     if(!category) {
-        throw new ApiError(500, "Something went wrong while adding category");
+        return res.status(500).json(new ApiResponse(500, {"error": "Failed to add category"}));
     }
 
     return res
@@ -154,12 +158,12 @@ const addCategory = asyncHandler( async(req, res) => {
 const deleteCategory = asyncHandler(async(req, res) => {
     const user = req?.user;
 
-    // if(!user || !user?.isAdmin) {
-    //     return res.status(403).json({
-    //         error: "Unauthorized access",
-    //         message: "Access to this resource is restricted to administrators only"
-    //     });
-    // }
+    if(!user || !user?.isAdmin) {
+        return res.status(403).json({
+            error: "Unauthorized access",
+            message: "Access to this resource is restricted to administrators only"
+        });
+    }
 
     const {categoryId} = req.params;
     // const {categoryId} = req.body;
@@ -218,12 +222,12 @@ const deleteCategory = asyncHandler(async(req, res) => {
 const updateCategory = asyncHandler(async(req, res) => {
     const user = req?.user;
 
-    // if(!user || !user?.isAdmin) {
-    //     return res.status(403).json({
-    //         error: "Unauthorized access",
-    //         message: "Access to this resource is restricted to administrators only"
-    //     });
-    // }
+    if(!user || !user?.isAdmin) {
+        return res.status(403).json({
+            error: "Unauthorized access",
+            message: "Access to this resource is restricted to administrators only"
+        });
+    }
 
     const { categoryId } = req.params
     const { name, description } = req.body
