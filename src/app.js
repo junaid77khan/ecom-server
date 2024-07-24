@@ -9,6 +9,7 @@ const app = express();
 const corsConfig = {
   origin: [
     "https://decor-candle.vercel.app",
+    "https://decor-candle-admin.vercel.app",
     "http://localhost:7000",
     "http://localhost:5173",
   ],
