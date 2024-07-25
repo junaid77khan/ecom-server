@@ -12,6 +12,8 @@ const corsConfig = {
     "https://decor-candle-admin.vercel.app",
     "http://localhost:7000",
     "http://localhost:5173",
+    "https://admin.skpdecor.co.in",
+    "https://skpdecor.co.in"
   ],
   credentials: true,
   methods: ["GET", "POST", "DELETE", "PUT"],

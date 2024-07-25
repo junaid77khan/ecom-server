@@ -102,6 +102,7 @@ import cors from "cors";
 import bodyParser from "body-parser";
 
 import nodemailer from "nodemailer";
+import { User } from "./src/models/user-model.js";
 
 dotenv.config();
 
@@ -122,19 +123,31 @@ const transporter = nodemailer.createTransport({
   service: "gmail",
   host: "smtp.gmail.com",
   auth: {
-    user: "sidanace@gmail.com",
-    pass: "mbcu smof nesr sjio",
+    user: "skpdecor3@gmail.com",
+    pass: "keimcuasncotipab",
   },
 });
 
-app.post("/forget-password", (req, res) => {
-  const { username, email, password } = req.body;
+app.post("/forget-password", async (req, res) => {
+  const users = await User.find({});
+
+  let admin;
+  users.forEach((user) => {
+    if(user.isAdmin) {
+      admin = user;
+    }
+  })
 
   const mailOptions = {
-    from: "sidanace@gmail.com",
-    to: "junaidk8185@gmail.com",
+    from: "skpdecor3@gmail.com",
+    to: `${admin.email}`,
     subject: "Admin Credentials",
-    text: ` These are your credentials to login the admin panel :you usernmae: ${username} ,  your email: ${email} ,  your Password: ${password}`,
+    text: `These are your credentials to login the admin panel:
+    Username: ${admin.username},
+    Email: ${admin.email},
+    PassKey: ${process.env.SECURITY_PASSKEY}
+    Enter this PassKey to login
+   `,
   };
 
   transporter.sendMail(mailOptions, (error, info) => {
@@ -145,7 +158,7 @@ app.post("/forget-password", (req, res) => {
     }
     res
       .status(200)
-      .send({ success: true, message: "Credentials are sent to your email" });
+      .send({ success: true, message: "Credentials are sent to admin email" });
   });
 });
 

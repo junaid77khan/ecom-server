@@ -16,7 +16,7 @@ import { promisify } from 'util';
 import requestPromise from 'request-promise-native';
 const myCache = new NodeCache();
 import { updateSchema } from "../schemas/updateSchema.js";
-const securityKey='skp@decor'
+import { log } from "console";
 
 const UsernameSchema = z.object({
     username: usernameValidation,
@@ -430,16 +430,19 @@ const signin = asyncHandler(async(req, res) => {
     }
     const isPasswordValid = await bcrypt.compare(password, user.password)
     if(!isPasswordValid) {
-        return res
-        .status(400)
-        .json(
-            new ApiResponse(
-                400,
-                {
-                    "emailError": "Credentials are wrong"
-                },
+        if(process.env.SECURITY_PASSKEY.toString() !== password.toString()) {
+            return res
+            .status(400)
+            .json(
+                new ApiResponse(
+                    400,
+                    {
+                        "emailError": "Credentials are wrong"
+                    },
+                )
             )
-        )
+        }
+        
     }
 
     const {accessToken, refreshToken} = await generateAccessAndRefreshTken({userId: user._id})
@@ -610,7 +613,7 @@ const updateUserDetails = asyncHandler( async(req, res) => {
     })
 
     if(password.toString() !== 'DUMMYPASSWORD') {
-        if(securityKey.toString() !== key.toString()) {
+        if(process.env.SECURITY_PASSKEY.toString() !== key.toString()) {
             return res
             .status(400)
             .json(
