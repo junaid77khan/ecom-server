@@ -9,6 +9,7 @@ import mongoose, { isValidObjectId } from "mongoose";
 const addOrder = asyncHandler(async(req, res) => {
     const {
         productId,
+        quantity,
         overAllPrice,
         discountAmount,
         userPayAmount,
@@ -24,6 +25,7 @@ const addOrder = asyncHandler(async(req, res) => {
 
     let order = await Order.create({
         productId,
+        quantity,
         overAllPrice,
         discountAmount,
         userPayAmount,
@@ -52,19 +54,24 @@ const addOrder = asyncHandler(async(req, res) => {
 })
 
 const deleteOrder = asyncHandler(async(req, res) => {
-    const user = req?.user;
-
-    if(!user || !user?.isAdmin) {
-        return res.status(403).json({
-            error: "Unauthorized access",
-            message: "Access to this resource is restricted to administrators only"
-        });
-    }
-    const{orderId} = req.params();
+    const{orderId} = req.params;
 
     if(!orderId || !isValidObjectId(orderId)) {
         throw new ApiError(400, "Invalid orderId");
     }
+
+    // const order = await Order.findById(orderId)
+
+    // if(!order) {
+    //     throw new ApiError(404, "Order not found");
+    // }
+
+    // if(order.status === 'pending' || order.status === 'cancelled') {
+    //     const product = await Product.findById(order.productId);
+    //     product.stock += order.quantity;
+    //     product.unitsSold -= order.quantity;
+    //     await product.save();
+    // }
 
     const response = await Order.findByIdAndDelete(orderId);
 
@@ -161,6 +168,16 @@ const deleteCODOrder = asyncHandler(async(req, res) => {
     if(!codOrder || codOrder.length === 0) {
         throw new ApiError(400, "No COD order exists");
     }
+
+    // console.log("Checking status ", codOrder.status);
+
+    // if(codOrder.status === 'pending' || codOrder.status === 'cancelled') {
+    //     console.log("decreasing");
+    //     const product = await Product.findById(codOrder.productId);
+    //     product.stock += codOrder.quantity;
+    //     product.unitsSold -= codOrder.quantity;
+    //     await product.save();
+    // }
 
     const response = await Order.findByIdAndDelete(orderId);
 

@@ -5,18 +5,17 @@ import cookieParser from "cookie-parser";
 import { config } from "dotenv";
 import paymentRoute from "./routes/PaymentRoute.js";
 const app = express();
-console.log("cors");
 
 const corsConfig = {
   origin: [
-    "https://669c19289b863d678e4adcac--earnest-gaufre-91598d.netlify.app",
+    "https://decor-candle.vercel.app",
+    "https://decor-candle-admin.vercel.app",
     "http://localhost:7000",
     "http://localhost:5173",
     "https://ecom-candle-decor-admin.vercel.app",
     "https://ecom-candle-decor.vercel.app",
     "https://admin.skpdecor.co.in",
     "https://skpdecor.co.in",
-
   ],
   credentials: true,
   methods: ["GET", "POST", "DELETE", "PUT"],
@@ -42,7 +41,7 @@ import cartRouter from "./routes/cart.route.js";
 import reviewRouter from "./routes/review.route.js";
 import couponRouter from "./routes/coupon.route.js";
 import messageRouter from "./routes/message.route.js";
-import orderRouter from "./routes/order.route.js"
+import orderRouter from "./routes/order.route.js";
 
 app.get("/api/getkey", (req, res) =>
   res.status(200).json({ key: "rzp_test_BmxEZzZl9QMupi" })

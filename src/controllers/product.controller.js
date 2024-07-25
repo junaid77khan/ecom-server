@@ -57,10 +57,6 @@ const getAllProducts = asyncHandler(async(req, res) => {
         throw new ApiError(400, "Something went wrong while fetching product data");
     }
 
-    if(products.length === 0) {
-        return res.json(new ApiResponse(200, "No Products available"))
-    }
-
     return res.json(new ApiResponse(200, products, "Products data found succesfully"))
 })
 
@@ -82,14 +78,6 @@ const searchProduct = asyncHandler(async (req, res) => {
       // Use await to resolve the query and apply pagination
       let data = await Product.find(queryObject).skip(skip).limit(limit);
       console.log(data);
-  
-      if (!data || data.length === 0) {
-        // Handle case where no products match the query
-        return res.status(404).json({
-          status: 'error',
-          message: 'No products found matching the search criteria.',
-        });
-      }
   
       return res.status(200).json(
        new ApiResponse(200, data, "Products fetched")
@@ -135,11 +123,6 @@ const getProductByCategory = asyncHandler(async (req, res) => {
         { $skip: (page - 1) * limit },
         { $limit: limit }
     ]);
-
-
-    if (products.length === 0) {
-        return res.json(new ApiResponse(200, "No products found for this category"));
-    }
 
     return res.json(new ApiResponse(200, products, "Product data fetched successfully"));
 });
@@ -609,11 +592,6 @@ const getProductByPriceRangeOfPartCategory = asyncHandler(async(req, res) => {
 
     products = products.filter((product) => (product.price >= minRange && product.price <= maxRange));
 
-    if(!products || products?.length === 0) {
-        return res
-        .json(new ApiResponse(200, "No product found in this range"));
-    }
-
     return res
         .json(new ApiResponse(200, products, "Products data fetched successfully"));
 })
@@ -655,12 +633,6 @@ const mostPopularProducts = asyncHandler(async(req, res) => {
         throw new ApiError(500, "Something went wrong while fetching most popular product data");
     }
 
-    if(popularProducts?.length === 0) {
-        return res
-        .status(200)
-        .json(new ApiResponse(200, "No products in database"));
-    }
-
     return res
         .status(200)
         .json(new ApiResponse(200, popularProducts, "Most popular products data fetched successfully"));
@@ -675,12 +647,6 @@ const newItems = asyncHandler(async(req, res) => {
         throw new ApiError(500, "Something went wrong while fetching new items data");
     }
 
-    if(newItemsData.length === 0) {
-        return res
-        .status(200)
-        .json(new ApiResponse(200, "No products in database"));
-    }
-
     return res
         .status(200)
         .json(new ApiResponse(200, newItemsData, "New Items data fetched successfully"));
@@ -693,12 +659,6 @@ const bestSeller = asyncHandler(async(req, res) => {
 
     if(!bestSellerProduct) {
         throw new ApiError(500, "Something went wrong while fetching best seller product data");
-    }
-
-    if(bestSellerProduct?.length === 0) {
-        return res
-        .status(200)
-        .json(new ApiResponse(200, "No products in database"));
     }
 
     return res

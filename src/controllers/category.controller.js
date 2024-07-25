@@ -64,12 +64,6 @@ const getAllCategories = asyncHandler(async(req, res) => {
         throw new ApiError(400, "Something went wrong while fetching catogries data");
     }
 
-    if(allCategories?.length == 0) {
-        return res
-        .status(200)
-        .json(new ApiResponse(200, "No categories available"))
-    }
-
     return res
     .status(200)
     .json(new ApiResponse(200, allCategories, "Categories Data fetched successfully"));
@@ -143,7 +137,7 @@ const addCategory = asyncHandler( async(req, res) => {
     });
 
     if(!category) {
-        return res.status(500).json(new ApiResponse(500, {"error": "Failed to add category"}));
+        return res.status(500).json(new ApiResponse(500, {}, "Failed to add category"));
     }
 
     return res
@@ -200,7 +194,7 @@ const deleteCategory = asyncHandler(async(req, res) => {
         if(!response) {
             return res
             .status(500)
-            .json(new ApiResponse(500, "Something went wrong while deleting product from database"));
+            .json(new ApiResponse(500, {}, "Something went wrong while deleting product from database"));
         }
     })
 
@@ -211,7 +205,7 @@ const deleteCategory = asyncHandler(async(req, res) => {
     if(!response) {
         return res
         .status(500)
-        .json(new ApiResponse(500, "Something went wrong while deleting category from database"));
+        .json(new ApiResponse(500, {}, "Something went wrong while deleting category from database"));
     }
 
     return res

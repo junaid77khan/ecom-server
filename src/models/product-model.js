@@ -97,7 +97,6 @@ productSchema.methods.calculateAverageRating = async function () {
 productSchema.pre('save', async function (next) {
   try {
     await this.calculateAverageRating();
-    console.log("Product avg rating", this.avgRating);
   } catch (error) {
     next(error);
   }
