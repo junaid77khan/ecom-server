@@ -91,8 +91,87 @@
 //   })
 //   .catch((err) => {
 //     console.log("MongoDB Conntection Failed !!!...", err);
-//   });
+// //   });
 
+// import dotenv from "dotenv";
+// import connectDB from "./src/db/index.js";
+// import app from "./src/app.js";
+// import Razorpay from "razorpay";
+// import express from "express";
+// import cors from "cors";
+// import bodyParser from "body-parser";
+
+// import nodemailer from "nodemailer";
+
+// dotenv.config();
+
+// app.use(
+//   cors({
+//     origin: "http://localhost:5173", // Your frontend's origin
+//     credentials: true,
+//   })
+// );
+
+// export const instance = new Razorpay({
+//   key_id: "rzp_test_BmxEZzZl9QMupi",
+//   key_secret: "ChsggKSAQkx7xs4hE0Fb37zh",
+// });
+
+// process.on("unhandledRejection", (reason, promise) => {
+//   console.error("Unhandled Rejection at:", promise, "reason:", reason);
+// });
+
+// app.use(express.json());
+// app.use(cors());
+// app.use(bodyParser.json());
+
+// const transporter = nodemailer.createTransport({
+//   service: "gmail",
+//   host: "smtp.gmail.com",
+//   auth: {
+//     user: "sidanace@gmail.com",
+//     pass: "mbcu smof nesr sjio",
+//   },
+// });
+
+// app.post("/forget-password", (req, res) => {
+//   const { username, email, password } = req.body;
+
+//   const mailOptions = {
+//     from: "sidanace@gmail.com",
+//     to: "junaidk8185@gmail.com",
+//     subject: "Admin Credentials",
+//     text: ` These are your credentials to login the admin panel :you usernmae: ${username} ,  your email: ${email} ,  your Password: ${password}`,
+//   };
+
+//   transporter.sendMail(mailOptions, (error, info) => {
+//     if (error) {
+//       return res
+//         .status(500)
+//         .send({ success: false, message: "Failed to send email", error });
+//     }
+//     res
+//       .status(200)
+//       .send({ success: true, message: "Credentials are sent to your email" });
+//   });
+// });
+
+// const PORT = process.env.PORT || 8000;
+
+// connectDB()
+//   .then(() => {
+//     app.on("error", (error) => {
+//       console.log("Error : ", error);
+//       throw error;
+//     });
+
+//     app.listen(PORT, () => {
+//       console.log(`Server is running at port : ${PORT}`);
+//     });
+//   })
+//   .catch((err) => {
+//     console.log("MongoDB Connection Failed !!!...", err);
+//   });
 import dotenv from "dotenv";
 import connectDB from "./src/db/index.js";
 import app from "./src/app.js";
