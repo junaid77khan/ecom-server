@@ -219,10 +219,10 @@ const getAuthToken = async () => {
   };
 
 const sendSuccessSMS = asyncHandler(async(req, res) => {
-    const {phoneNumber} = req.body;
+    const {phoneNumber, fullName} = req.body;
     var options = {
     'method': 'POST',
-    'url': `https://cpaas.messagecentral.com/v3/verification/send?countryCode=91&customerId=C-3E0ACB6DAE8D4B1&senderId=UTOMOB&type=SMS&flowType=SMS&mobileNumber=${phoneNumber}&message=Welcome to Message Central. We are delighted to have you here! - Powered by U2opia`,
+    'url': `https://cpaas.messagecentral.com/v3/verification/send?countryCode=91&customerId=C-3E0ACB6DAE8D4B1&senderId=UTOMOB&type=SMS&flowType=SMS&mobileNumber=${phoneNumber}&message=Hello ${fullName}! Your SKP Decor order is confirmed and being processed. We’re excited to get your items to you! Stay tuned for shipping updates`,
     'headers': {
     'authToken': `eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJDLTNFMEFDQjZEQUU4RDRCMSIsImlhdCI6MTcyMTgyODE4NywiZXhwIjoxODc5NTA4MTg3fQ.jiqsT9Z6LSu2WR2fbYYbiCNzxsfdsrqYbGUk-gFz422cCKZ4MZA2iExqmGa6Qbp98ZR_hLM9r7OPoDKL-s1U1w`
     }
