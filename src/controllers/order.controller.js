@@ -118,6 +118,9 @@ const allCodOrders = asyncHandler(async(req, res)  => {
             $addFields: {
               product: { $arrayElemAt: ["$product", 0] } 
             }
+          },
+          {
+            $sort: { createdAt: -1 } 
           }
     ])
 
