@@ -87,9 +87,12 @@ const deleteOrder = asyncHandler(async(req, res) => {
 const allOrders = asyncHandler(async(req, res) => {
     const orders = await Order.aggregate([
         {
-            $match: {}
+            $match: {}  
+        },
+        {
+            $sort: { createdAt: -1 }  
         }
-    ])
+    ]);
 
     return res
     .status(200)

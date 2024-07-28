@@ -48,7 +48,7 @@ const addReview = asyncHandler(async(req, res) => {
     
     await product.save();
 
-    const reviews = await Review.find({productId});
+    const reviews = await Review.find({productId}).sort({ createdAt: -1 });
 
     return res
         .json(new ApiResponse(200, reviews, "Review added to the product"));
@@ -69,7 +69,7 @@ const getProductReviews = asyncHandler(async (req, res) => {
     }
 
     // Find reviews associated with the product ObjectId
-    const reviews = await Review.find({ productId: product._id });
+    const reviews = await Review.find({ productId: product._id }).sort({ createdAt: -1 });
 
     if (!reviews) {
         throw new ApiError(500, "Something went wrong while fetching reviews");

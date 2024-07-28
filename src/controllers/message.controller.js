@@ -38,7 +38,7 @@ const getMessages  = asyncHandler(async(req, res) => {
         });
     }
 
-    const messages = await Contact.find({})
+    const messages = await Contact.find({}).sort({ createdAt: -1 });
 
     if(!messages) {
         throw new ApiError(400, "Something went wrong while fetching messages")

@@ -1,7 +1,6 @@
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/AsyncHandler.js";
-import mongoose, { isValidObjectId } from "mongoose";
 import { User } from "../models/user-model.js";
 import { signupSchema } from "../schemas/signupSchema.js";
 import bcrypt from 'bcrypt';
@@ -12,11 +11,19 @@ import { generateAccessAndRefreshTken } from "../utils/authUtils.js";
 import { sendVerificationEmail } from "../helpers/sendVerificationEmail.js";
 import NodeCache from 'node-cache';
 import request from 'request';
-import { promisify } from 'util';
 import requestPromise from 'request-promise-native';
 const myCache = new NodeCache();
 import { updateSchema } from "../schemas/updateSchema.js";
-import fetch from 'node-fetch';
+import nodemailer from "nodemailer";
+
+const transporter = nodemailer.createTransport({
+    service: "gmail",
+    host: "smtp.gmail.com",
+    auth: {
+      user: "skpdecor3@gmail.com",
+      pass: "keimcuasncotipab",
+    },
+  });
 
 const UsernameSchema = z.object({
     username: usernameValidation,
@@ -219,10 +226,103 @@ const getAuthToken = async () => {
   };
 
 const sendSuccessSMS = asyncHandler(async(req, res) => {
-    const { phoneNumber, fullName } = req.body;
+    const { phoneNumber, fullName, email, productName, quantity, date, time } = req.body;
 
-    // Log request body for debugging purposes
-    console.log(req.body);
+    const users = await User.find({});
+    let admin;
+    users.forEach((user) => {
+      if(user.isAdmin) {
+        admin = user;
+      }
+    })
+  
+    if(email) {
+        const mailOptions = {
+            from: "skpdecor3@gmail.com",
+            to: email,
+            subject: "Thank You for Your Order! – Order Confirmation from SKP Decor",
+            html: `
+              <html>
+                <head>
+                  <style>
+                    body {
+                      font-family: Arial, sans-serif;
+                      color: #333; /* Dark grey text color */
+                      line-height: 1.6;
+                      padding: 20px;
+                      background-color: #f9f9f9; /* Light grey background */
+                      margin: 0;
+                    }
+                    .container {
+                      max-width: 600px;
+                      margin: 0 auto;
+                      padding: 20px;
+                      background-color: #fff; /* White background for content area */
+                      border-radius: 8px;
+                      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                    }
+                    h1 {
+                      color: #ff9800; /* Orange heading color */
+                      border-bottom: 2px solid #ddd; /* Light grey border */
+                      padding-bottom: 10px;
+                      margin-bottom: 20px;
+                    }
+                    p {
+                      margin: 10px 0;
+                      font-size: 16px;
+                    }
+                    .label {
+                      font-weight: bold;
+                      color: #ff9800; /* Orange color for labels */
+                    }
+                    .footer {
+                      margin-top: 20px;
+                      font-size: 14px;
+                      color: #555; /* Dark grey for footer text */
+                    }
+                    .link {
+                      color: #1e90ff;
+                      text-decoration: none;
+                    }
+                    .link:hover {
+                      text-decoration: underline;
+                    }
+                  </style>
+                </head>
+                <body>
+                  <div class="container">
+                    <h1>Order Confirmation</h1>
+                    <p>Dear ${fullName},</p>
+                    <p>Thank you so much for your recent order with SKP Decor!</p>
+                    <p>We are excited to let you know that we have received your order. Here are the details of your purchase:</p>
+                    <p><span class="label">Product Name:</span> ${productName}</p>
+                    <p><span class="label">Quantity:</span> ${quantity}</p>
+                    <p><span class="label">Date of Order:</span> ${date}</p>
+                    <p><span class="label">Time of Order:</span> ${time}</p>
+                    <p>Your satisfaction is our top priority. If you have any questions or need further assistance, please feel free to reach out to us. Our customer support team is always here to help!</p>
+                    <p>Call us on - 8360175563</p>
+                    <p>Once again, thank you for choosing SKP Decor. We truly appreciate your business and look forward to serving you again!</p>
+                    <p class="footer">Warm regards,<br>The SKP Decor Team</p>
+                  </div>
+                </body>
+              </html>
+            `,
+        };
+        
+          
+          
+      
+        transporter.sendMail(mailOptions, (error, info) => {
+          if (error) {
+            return res
+              .status(500)
+              .send({ success: false, message: "Failed to send email", error });
+          }
+          res
+            .status(200)
+            .send({ success: true, message: "Order details send to admin at email!!" });
+        });
+    }
 
     const message = `Hello ${encodeURIComponent(fullName)}! Your SKP Decor order is confirmed and being processed. We’re excited to get your items to you! Stay tuned for shipping updates`;
 
@@ -249,6 +349,101 @@ const sendSuccessSMS = asyncHandler(async(req, res) => {
     return res
     .status(200)
     .json(new ApiResponse(200, {}, "Sent successfully"))
+})
+
+const sendEmailToAdmin = asyncHandler(async(req, res ) => {
+    const { fullName, phoneNumber, productName, quantity, date, time } = req.body;
+      
+    const users = await User.find({});
+    let admin;
+    users.forEach((user) => {
+      if(user.isAdmin) {
+        admin = user;
+      }
+    })
+  
+    const mailOptions = {
+        from: "skpdecor3@gmail.com",
+        to: `${admin.email}`,
+        subject: "New Order Received",
+        html: `
+          <html>
+            <head>
+              <style>
+                body {
+                  font-family: Arial, sans-serif;
+                  color: #000; /* Black text color */
+                  line-height: 1.6;
+                  padding: 20px;
+                  background-color: #ff9800; /* Orange background */
+                  margin: 0;
+                }
+                .container {
+                  max-width: 600px;
+                  margin: 0 auto;
+                  padding: 20px;
+                  background-color: #fff; /* White background for content area */
+                  border-radius: 8px;
+                  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+                }
+                h1 {
+                  color: #000; /* Black heading color */
+                  border-bottom: 2px solid #ddd; /* Light grey border */
+                  padding-bottom: 10px;
+                  margin-bottom: 20px;
+                }
+                p {
+                  margin: 10px 0;
+                  font-size: 16px;
+                }
+                .label {
+                  font-weight: bold;
+                  color: #ff9800; /* Orange color for labels */
+                }
+                .footer {
+                  margin-top: 20px;
+                  font-size: 14px;
+                  color: #555; /* Dark grey for footer text */
+                }
+                .link {
+                  color: #1e90ff;
+                  text-decoration: none;
+                }
+                .link:hover {
+                  text-decoration: underline;
+                }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <h1>New Order Received</h1>
+                <p>We are pleased to inform you that a new order has been received. Below are the details of the order:</p>
+                <p><span class="label">Customer Name:</span> ${fullName}</p>
+                <p><span class="label">Customer Phone Number:</span> ${phoneNumber}</p>
+                <p><span class="label">Product Name:</span> ${productName}</p>
+                <p><span class="label">Quantity:</span> ${quantity}</p>
+                <p><span class="label">Date of Order:</span> ${date}</p>
+                <p><span class="label">Time of Order:</span> ${time}</p>
+                <p>Please review the order details and proceed with the necessary actions:</p>
+                <p><a href="https://admin.skpdecor.co.in" class="link">Go to Admin Panel</a></p>
+              </div>
+            </body>
+          </html>
+        `,
+      };
+      
+      
+  
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        return res
+          .status(500)
+          .send({ success: false, message: "Failed to send email", error });
+      }
+      res
+        .status(200)
+        .send({ success: true, message: "Order details send to admin at email!!" });
+    });
 })
 
 const sendVerificationCodeThroughSMS = asyncHandler(async(req, res) => {
@@ -670,4 +865,4 @@ const updateUserDetails = asyncHandler( async(req, res) => {
     .json(new ApiResponse(200, user, "User updated successfully"));
 } )
 
-export {signup, sendVerificationCode, updateUserDetails, sendSuccessSMS, verifyCode, curUser, sendVerificationCodeThroughSMS, verifySMSOtp, signin, refreshAccessToken, logout, isUserLoggedIn};
+export {signup, sendVerificationCode, updateUserDetails, sendSuccessSMS, sendEmailToAdmin, verifyCode, curUser, sendVerificationCodeThroughSMS, verifySMSOtp, signin, refreshAccessToken, logout, isUserLoggedIn};

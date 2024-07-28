@@ -103,6 +103,9 @@ const getAllRazorPayOrdersBYId = asyncHandler(async(req, res) => {
     },
     {
       $unwind: '$orderDetails.product'
+    },
+    {
+      $sort: { 'orderDetails.createdAt': -1 }  
     }
   ]);
 

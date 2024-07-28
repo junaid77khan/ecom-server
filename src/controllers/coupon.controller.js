@@ -65,17 +65,16 @@ const addCoupon = asyncHandler(async(req, res) => {
         .json(new ApiResponse(200, createdCoupon, "Coupon added!!"));
 })
 
-const getCoupons = asyncHandler(async(req, res) => {
+const getCoupons = asyncHandler(async (req, res) => {
+    const coupons = await Coupon.find({}).sort({ createdAt: -1 });
 
-    const coupons = await Coupon.find({})
-
-    if(!coupons) {
-        throw new ApiError(400, "Something went wrong while fetching coupons")
+    if (!coupons || coupons.length === 0) {
+        throw new ApiError(400, "No coupons found");
     }
 
-    return res
-        .json(new ApiResponse(200, coupons, "Coupon Fetched!!"));
-})
+    return res.json(new ApiResponse(200, coupons, "Coupons fetched successfully"));
+});
+
 
 const deleteCoupons = asyncHandler(async(req, res) => {
     const user = req?.user;

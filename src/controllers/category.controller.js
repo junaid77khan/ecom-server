@@ -25,7 +25,7 @@ const deleteImages = (files) => {
 };
 
 const getAllCategories = asyncHandler(async(req, res) => {
-    let { page = 1, limit = 10, query, sortType="asc" } = req.query
+    let { page = 1, limit = 10, query, sortType="dsc" } = req.query
     page = isNaN(page) ? 1 : Number(page);
     limit = isNaN(limit) ? 10 : Number(limit);
 
