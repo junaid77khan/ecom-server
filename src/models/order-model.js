@@ -21,7 +21,8 @@ const orderSchema = new Schema({
   },
   email: {
     type: String,
-    default: "NA"
+    default: "NA",
+    required: [true, "Email is required"]
   },
   phone: {
     type: String,

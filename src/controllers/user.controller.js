@@ -235,121 +235,169 @@ const sendSuccessSMS = asyncHandler(async(req, res) => {
         admin = user;
       }
     })
+
+    const mailOptions = {
+      from: "skpdecor3@gmail.com",
+      to: email,
+      subject: "Thank You for Your Order! – Order Confirmation from SKP Decor",
+      html: `
+        <html>
+          <head>
+            <style>
+              body {
+                font-family: Arial, sans-serif;
+                color: #333; /* Dark grey text color */
+                line-height: 1.6;
+                padding: 20px;
+                background-color: #f9f9f9; /* Light grey background */
+                margin: 0;
+              }
+              .container {
+                max-width: 600px;
+                margin: 0 auto;
+                padding: 20px;
+                background-color: #fff; /* White background for content area */
+                border-radius: 8px;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+              }
+              h1 {
+                color: #ff9800; /* Orange heading color */
+                border-bottom: 2px solid #ddd; /* Light grey border */
+                padding-bottom: 10px;
+                margin-bottom: 20px;
+              }
+              p {
+                margin: 10px 0;
+                font-size: 16px;
+              }
+              .label {
+                font-weight: bold;
+                color: #ff9800; /* Orange color for labels */
+              }
+              .footer {
+                margin-top: 20px;
+                font-size: 14px;
+                color: #555; /* Dark grey for footer text */
+              }
+              .link {
+                color: #1e90ff;
+                text-decoration: none;
+              }
+              .link:hover {
+                text-decoration: underline;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <h1>Order Confirmation</h1>
+              <p>Dear ${fullName},</p>
+              <p>Thank you so much for your recent order with SKP Decor!</p>
+              <p>We are excited to let you know that we have received your order. Here are the details of your purchase:</p>
+              <p><span class="label">Product Name:</span> ${productName}</p>
+              <p><span class="label">Quantity:</span> ${quantity}</p>
+              <p><span class="label">Date of Order:</span> ${date}</p>
+              <p><span class="label">Time of Order:</span> ${time}</p>
+              <p>Your satisfaction is our top priority. If you have any questions or need further assistance, please feel free to reach out to us. Our customer support team is always here to help!</p>
+              <p>Call us on - 8360175563</p>
+              <p>Once again, thank you for choosing SKP Decor. We truly appreciate your business and look forward to serving you again!</p>
+              <p class="footer">Warm regards,<br>The SKP Decor Team</p>
+            </div>
+          </body>
+        </html>
+      `,
+  };
   
-    if(email) {
-        const mailOptions = {
-            from: "skpdecor3@gmail.com",
-            to: email,
-            subject: "Thank You for Your Order! – Order Confirmation from SKP Decor",
-            html: `
-              <html>
-                <head>
-                  <style>
-                    body {
-                      font-family: Arial, sans-serif;
-                      color: #333; /* Dark grey text color */
-                      line-height: 1.6;
-                      padding: 20px;
-                      background-color: #f9f9f9; /* Light grey background */
-                      margin: 0;
-                    }
-                    .container {
-                      max-width: 600px;
-                      margin: 0 auto;
-                      padding: 20px;
-                      background-color: #fff; /* White background for content area */
-                      border-radius: 8px;
-                      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-                    }
-                    h1 {
-                      color: #ff9800; /* Orange heading color */
-                      border-bottom: 2px solid #ddd; /* Light grey border */
-                      padding-bottom: 10px;
-                      margin-bottom: 20px;
-                    }
-                    p {
-                      margin: 10px 0;
-                      font-size: 16px;
-                    }
-                    .label {
-                      font-weight: bold;
-                      color: #ff9800; /* Orange color for labels */
-                    }
-                    .footer {
-                      margin-top: 20px;
-                      font-size: 14px;
-                      color: #555; /* Dark grey for footer text */
-                    }
-                    .link {
-                      color: #1e90ff;
-                      text-decoration: none;
-                    }
-                    .link:hover {
-                      text-decoration: underline;
-                    }
-                  </style>
-                </head>
-                <body>
-                  <div class="container">
-                    <h1>Order Confirmation</h1>
-                    <p>Dear ${fullName},</p>
-                    <p>Thank you so much for your recent order with SKP Decor!</p>
-                    <p>We are excited to let you know that we have received your order. Here are the details of your purchase:</p>
-                    <p><span class="label">Product Name:</span> ${productName}</p>
-                    <p><span class="label">Quantity:</span> ${quantity}</p>
-                    <p><span class="label">Date of Order:</span> ${date}</p>
-                    <p><span class="label">Time of Order:</span> ${time}</p>
-                    <p>Your satisfaction is our top priority. If you have any questions or need further assistance, please feel free to reach out to us. Our customer support team is always here to help!</p>
-                    <p>Call us on - 8360175563</p>
-                    <p>Once again, thank you for choosing SKP Decor. We truly appreciate your business and look forward to serving you again!</p>
-                    <p class="footer">Warm regards,<br>The SKP Decor Team</p>
-                  </div>
-                </body>
-              </html>
-            `,
-        };
-        
-          
-          
-      
-        transporter.sendMail(mailOptions, (error, info) => {
-          if (error) {
-            return res
-              .status(500)
-              .send({ success: false, message: "Failed to send email", error });
-          }
-          res
-            .status(200)
-            .send({ success: true, message: "Order details send to admin at email!!" });
-        });
+    
+    
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      return res
+        .status(500)
+        .send({ success: false, message: "Failed to send email", error });
     }
+    res
+      .status(200)
+      .send({ success: true, message: "Order details send to admin at email!!" });
+  });
 
-    const message = `Hello ${encodeURIComponent(fullName)}! Your SKP Decor order is confirmed and being processed. We’re excited to get your items to you! Stay tuned for shipping updates`;
+    // const message = `Hello ${encodeURIComponent(fullName)}! Your SKP Decor order for ${productName} is confirmed and being processed. Date of Order - ${date}, Time of order - ${time}. We’re excited to get your items to you! Stay tuned for shipping updates`;
 
-    const options = {
-        method: 'POST',
-        url: 'https://cpaas.messagecentral.com/v3/verification/send',
-        params: {
-            countryCode: '91',
-            customerId: 'C-3E0ACB6DAE8D4B1',
-            senderId: 'UTOMOB',
-            type: 'SMS',
-            flowType: 'SMS',
-            mobileNumber: phoneNumber,
-            message: message
-        },
-        headers: {
-            'authToken': 'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJDLTNFMEFDQjZEQUU4RDRCMSIsImlhdCI6MTcyMTgyODE4NywiZXhwIjoxODc5NTA4MTg3fQ.jiqsT9Z6LSu2WR2fbYYbiCNzxsfdsrqYbGUk-gFz422cCKZ4MZA2iExqmGa6Qbp98ZR_hLM9r7OPoDKL-s1U1w'
-        }
-    };
-    request(options, function (error, response) {
-    if (error) throw new ApiError(400, error);
-    console.log(response.body);
-    });
-    return res
-    .status(200)
-    .json(new ApiResponse(200, {}, "Sent successfully"))
+    // var options = {
+    //   'method': 'POST',
+    //   'url': `https://cpaas.messagecentral.com/verification/v3/send?countryCode=91&customerId=C-3E0ACB6DAE8D4B1&senderId=SKP Decor&type=SMS&flowType=SMS&mobileNumber=${phoneNumber}&message=${message}`,
+    //   'headers': {
+    //   'authToken': `eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJDLUZCMzg2MDM2MzgyNTRFOSIsImlhdCI6MTcyMjI0NDY4MSwiZXhwIjoxODc5OTI0NjgxfQ.MjfMgBNzHHZfklc18LAwOlUV28k_atPb7jLHMJ8ungAssIb1KJTFWOh1RIBsHF40S443e0Wrd9Jx5pfTv7-Vrg`
+    //   }
+    //   };
+    //   request(options, function (error, response) {
+    //   if (error) throw new Error(error);
+    //   console.log(response.body);
+    //   return res
+    //   .status(200)
+    //   .json(new ApiResponse(200, response.body, "Done"))
+    //   });
 })
+
+// const testing = asyncHandler(async (req, res) => {
+//   const { phoneNumber, fullName, productName, date, time } = req.body;
+
+//   // URL-encode the parameters to prevent unescaped characters
+//   const encodedFullName = encodeURIComponent(fullName);
+//   const encodedProductName = encodeURIComponent(productName);
+//   const encodedDate = encodeURIComponent(date);
+//   const encodedTime = encodeURIComponent(time);
+//   const encodedPhoneNumber = encodeURIComponent(phoneNumber);
+
+//   const message = `Hello ${encodedFullName}! Your SKP Decor order for ${encodedProductName} is confirmed and being processed. Date of Order - ${encodedDate}, Time of order - ${encodedTime}. We’re excited to get your items to you! Stay tuned for shipping updates`;
+
+//   // Ensure the whole URL is properly encoded
+//   const url = `https://cpaas.messagecentral.com/verification/v3/send?countryCode=91&customerId=C-3E0ACB6DAE8D4B1&senderId=UTOMOB&type=SMS&flowType=SMS&mobileNumber=${encodedPhoneNumber}&message=${encodeURIComponent(message)}`;
+
+//   const options = {
+//     method: 'POST',
+//     url: url,
+//     headers: {
+//       'authToken': `eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJDLUZCMzg2MDM2MzgyNTRFOSIsImlhdCI6MTcyMjI0NDY4MSwiZXhwIjoxODc5OTI0NjgxfQ.MjfMgBNzHHZfklc18LAwOlUV28k_atPb7jLHMJ8ungAssIb1KJTFWOh1RIBsHF40S443e0Wrd9Jx5pfTv7-Vrg`
+//     }
+//   };
+
+//   request(options, function (error, response) {
+//     if (error) {
+//       console.error('Request error:', error);
+//       return res.status(500).json(new ApiResponse(500, null, "Internal Server Error"));
+//     }
+//     console.log('Response body:', response.body);
+//     return res
+//       .status(200)
+//       .json(new ApiResponse(200, response.body, "Done"));
+//   });
+// });
+
+// const testing = asyncHandler(async(req, res) => {
+
+//   const { phoneNumber, fullName, productName, date, time } = req.body;
+
+//   // URL-encode the parameters to prevent unescaped characters
+//   // const encodedFullName = encodeURIComponent(fullName);
+//   // const encodedProductName = encodeURIComponent(productName);
+//   // const encodedDate = encodeURIComponent(date);
+//   // const encodedTime = encodeURIComponent(time);
+//   // const encodedPhoneNumber = encodeURIComponent(phoneNumber);
+
+//   var options = {
+//   'method': 'POST',
+//   'url': `https://cpaas.messagecentral.com/verification/v3/send?countryCode=91&customerId=C-FB38603638254E9&senderId=UTOMOB&type=SMS&flowType=SMS&mobileNumber=${phoneNumber}&message=Welcome to Message Central. We are are delighted to have you here! - Powered by U2opia`,
+//   'headers': {
+//   'authToken': `eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJDLUZCMzg2MDM2MzgyNTRFOSIsImlhdCI6MTcyMjI0NDY4MSwiZXhwIjoxODc5OTI0NjgxfQ.MjfMgBNzHHZfklc18LAwOlUV28k_atPb7jLHMJ8ungAssIb1KJTFWOh1RIBsHF40S443e0Wrd9Jx5pfTv7-Vrg`
+//   }
+//   };
+//   request(options, function (error, response) {
+//   if (error) throw new Error(error);
+//   console.log(response.body);
+//   });
+// })
 
 const sendEmailToAdmin = asyncHandler(async(req, res ) => {
     const { fullName, phoneNumber, productName, quantity, date, time } = req.body;
