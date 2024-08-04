@@ -12,8 +12,8 @@ import { User } from "./src/models/user-model.js";
 dotenv.config();
 
 export const instance = new Razorpay({
-  key_id: "rzp_test_BmxEZzZl9QMupi",
-  key_secret: "ChsggKSAQkx7xs4hE0Fb37zh",
+  key_id: process.env.KEY_ID,
+  key_secret: process.env.KEY_SECRET,
 });
 
 process.on("unhandledRejection", (reason, promise) => {
