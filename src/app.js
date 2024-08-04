@@ -43,7 +43,7 @@ import messageRouter from "./routes/message.route.js";
 import orderRouter from "./routes/order.route.js";
 
 app.get("/api/getkey", (req, res) =>
-  res.status(200).json({ key: "rzp_test_BmxEZzZl9QMupi" })
+  res.status(200).json({ key: process.env.KEY_ID })
 );
 
 app.use("/api/v1/category", categoryRouter);
