@@ -6,7 +6,7 @@ export const imageSchema = z
     .any()
     .refine((files) => {
         return files?.image?.[0]?.size <= MAX_FILE_SIZE;
-    }, `Max image size is 5MB.`)
+    }, `Max image size is 10MB.`)
     .refine(
     (files) => ACCEPTED_IMAGE_MIME_TYPES.includes(files?.image?.[0]?.mimetype),
     "Only .jpg, .jpeg, .png and .webp formats are supported."
@@ -15,7 +15,6 @@ export const imageSchema = z
 export const categoryName = z
     .string()
     .max(100, "Must contains 100 characters or less")
-    .regex(/^[a-zA-Z0-9\s\-_]+$/, "Must not contain special characters")
 
 export const categorySchema = z.object({
     name: categoryName,

@@ -3,15 +3,14 @@ import { MAX_FILE_SIZE } from '../constants.js';
 import { ACCEPTED_IMAGE_MIME_TYPES } from '../constants.js';
 
 export const specificationSchema = z.array(z.object({
-  name: z.string().min(1, "Name is required").max(30, "Name must be 30 characters or less"),
-  value: z.string().min(1, "Value is required").max(30, "Value must be 30 characters or less"),
+  name: z.string().min(1, "Name is required").max(40, "Name must be 30 characters or less"),
+  value: z.string().min(1, "Value is required").max(40, "Value must be 30 characters or less"),
 })).min(1, "Specification is required").max(10, "No more than 10 specification allowed").optional();
 
 export const nameSchema = z
   .string()
   .min(10, "Product name must be 10 characters or more")
   .max(255, "Product name must be 255 characters or less")
-  .regex(/^[a-zA-Z0-9\s\-_]+$/, "Product name must not contain special characters");
 
 export const descriptionSchema = z.string().min(10, "Description must be 10 characters or more").max(3000, "Description must be 3000 characters or less")
 
@@ -45,7 +44,7 @@ export const ImageArraySchema = z
       return false;
   }
   return true;
-}, `Max image size is 5MB for each image.`)
+}, `Max image size is 10MB for each image.`)
 .refine((files) => {
   if (files['image1'] && !ACCEPTED_IMAGE_MIME_TYPES.includes(files?.image1[0].mimetype)) {
       return false;
