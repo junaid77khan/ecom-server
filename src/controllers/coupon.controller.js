@@ -16,11 +16,21 @@ const addCoupon = asyncHandler(async(req, res) => {
             message: "Access to this resource is restricted to administrators only"
         });
     }
-    let {couponId, discountValue} = req.params;
+    let {couponId, discountValue, minRange} = req.params;
 
-    if(!couponId || !discountValue) {
+    if(!couponId || !discountValue || !minRange) {
         throw new ApiError(400, "Invalid data received");
     }
+
+    let convertedMinRange = Number(minRange);
+
+    if (isNaN(convertedMinRange) || !Number.isFinite(convertedMinRange)) {
+        return res
+            .status(400)
+            .json(new ApiResponse(400, { "minRangeError": "MinRange must be a number" }, "Discount value error"));
+    }
+
+    minRange = convertedMinRange;
 
     discountValue = Number(discountValue)
 
@@ -42,8 +52,6 @@ const addCoupon = asyncHandler(async(req, res) => {
         .json(new ApiResponse(400, {"discountValueError": discountValueErrors?.length > 0 ? discountValueErrors : "Invalid discount value"}, "Discount value error"))
     }
 
-    discountValue = Number(discountValue);
-
     const existedCoupon = await Coupon.find({couponId})
 
     if(existedCoupon.length > 0) {
@@ -55,6 +63,7 @@ const addCoupon = asyncHandler(async(req, res) => {
     const createdCoupon = await Coupon.create({
         couponId,
         discountValue,
+        minRange
     });
 
     if(!createdCoupon) {

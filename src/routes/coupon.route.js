@@ -4,7 +4,7 @@ import { verifyJWT } from "../middlewares/auth.middlware.js";
 
 const router = Router()
 
-router.route("/add-coupon/:couponId/:discountValue").get(
+router.route("/add-coupon/:couponId/:discountValue/:minRange").get(
     verifyJWT,
     addCoupon
 );

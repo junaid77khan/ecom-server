@@ -8,6 +8,10 @@ const couponSchema = new mongoose.Schema({
   discountValue: {
     type: Number,
     required: true,
+  },
+  minRange: {
+    type: Number,
+    required: true
   }
 }, { timestamps: true });
 
