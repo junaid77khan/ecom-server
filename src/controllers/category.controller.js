@@ -54,7 +54,6 @@ const getAllCategories = asyncHandler(async(req, res) => {
 
         { $skip: ( (page-1) * limit ) },
 
-        { $limit: limit }
     )
 
     const allCategories = await Category.aggregate(pipeline);

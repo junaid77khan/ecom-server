@@ -121,7 +121,6 @@ const getProductByCategory = asyncHandler(async (req, res) => {
             }
         },
         { $skip: (page - 1) * limit },
-        { $limit: limit }
     ]);
 
     return res.json(new ApiResponse(200, products, "Product data fetched successfully"));
